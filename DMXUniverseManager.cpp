@@ -8,8 +8,7 @@
   ==============================================================================
 */
 
-#include "Common/CommonIncludes.h"
-#include "DMXUniverseManager.h"
+#include "JuceHeader.h"
 
 DMXUniverseManager::DMXUniverseManager(bool useParams) :
     BaseManager("Universes"),

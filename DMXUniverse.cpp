@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "Common/CommonIncludes.h"
+#include "JuceHeader.h"
 
 DMXUniverse::DMXUniverse(bool useParams) :
 	BaseItem("Universe", false, false),

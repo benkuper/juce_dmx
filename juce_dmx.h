@@ -22,7 +22,7 @@
   website:          https://github.com/benkuper/juce_dmx
   license:          GPLv3
 
-  dependencies:    juce_organicui, juce_audio_basics,juce_audio_devices,juce_audio_formats, juce_audio_processors, juce_audio_utils
+  dependencies:    juce_organicui, juce_serial
 
  END_JUCE_MODULE_DECLARATION
 
@@ -41,6 +41,7 @@
 
 
 #include <juce_organicui/juce_organicui.h>
+#include <juce_serial/juce_serial.h>
 
 using namespace juce;
 
@@ -52,6 +53,7 @@ using namespace juce;
 #include "device/DMXArtNetDevice.h"
 #include "device/DMXEnttecProDevice.h"
 #include "device/DMXOpenUSBDevice.h"
+#include "device/sacn/e131.h"
 #include "device/DMXSACNDevice.h"
 
 #include "ui/DMXUniverseEditor.h"

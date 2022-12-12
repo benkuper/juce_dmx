@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "Common/CommonIncludes.h"
+#include "JuceHeader.h"
 
 #if JUCE_LINUX || JUCE_MAC
 #include <sys/ioctl.h>
@@ -82,14 +82,14 @@ void DMXOpenUSBDevice::setPortConfig()
 
 }
 
-void DMXOpenUSBDevice::sendDMXValuesSerialInternal(DMXUniverse* u)
+void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values)
 {
 	try
 	{
 		dmxPort->port->setBreak(true);
 		dmxPort->port->setBreak(false);
 		dmxPort->port->write(startCode, 1); //start code
-		dmxPort->port->write(u->values, DMX_NUM_CHANNELS);
+		dmxPort->port->write(values, DMX_NUM_CHANNELS);
 	}
 	catch (serial::IOException e)
 	{

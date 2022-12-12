@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "Common/CommonIncludes.h"
+#include "JuceHeader.h"
 
 juce_ImplementSingleton(DMXManager)
 
