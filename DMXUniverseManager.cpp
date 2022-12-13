@@ -21,7 +21,7 @@ DMXUniverseManager::~DMXUniverseManager()
 {
 }
 
-DMXUniverse* DMXUniverseManager::createItem()
+DMXUniverseItem* DMXUniverseManager::createItem()
 {
-    return new DMXUniverse(useParams);
+    return new DMXUniverseItem(useParams);
 }

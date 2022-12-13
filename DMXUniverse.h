@@ -9,6 +9,11 @@
 */
 
 #pragma once
+#define DMX_MAX_NET 128
+#define DMX_MAX_SUBNET_PER_NET 16
+#define DMX_MAX_UNIVERSES_PER_SUBNET 16
+#define DMX_MAX_UNIVERSES DMX_MAX_NET * DMX_MAX_SUBNET_PER_NET * DMX_MAX_UNIVERSES_PER_SUBNET
+
 #define DMX_NUM_CHANNELS 512
 
 enum DMXByteOrder { BIT8, MSB, LSB };
@@ -70,36 +75,47 @@ public:
 	static String getTypeStringStatic() { return "DMX Value"; }
 };
 
-class DMXUniverse :
-	public BaseItem
+class DMXUniverse
 {
 public:
-	DMXUniverse(bool useParams = false);
-	~DMXUniverse();
+	DMXUniverse(int net, int subnet, int universe);
 
-	bool useParams;
-	IntParameter* net;
-	IntParameter* subnet;
-	IntParameter* universe;
-
-	Array<DMXValueParameter*> valueParams;
-
-	CriticalSection valueLock;
-	uint8 values[DMX_NUM_CHANNELS];
+	int net;
+	int subnet;
+	int universe;
 
 	bool isDirty;
 
-	void updateValue(int channel, uint8 value);
-	void updateValues(Array<uint8> values);
+	SpinLock valuesLock;
+	uint8 values[DMX_NUM_CHANNELS];
+	virtual void updateValue(int channel, uint8 value);
+	virtual void updateValues(Array<uint8> values);
+	
+	bool checkSignature(int net, int subnet, int universe);
+	String toString() const;
+};
+
+
+class DMXUniverseItem :
+	public BaseItem,
+	public DMXUniverse
+{
+public:
+	DMXUniverseItem(bool useParams = false);
+	~DMXUniverseItem();
+
+	IntParameter* netParam;
+	IntParameter* subnetParam;
+	IntParameter* universeParam;
+
+	bool useParams;
+	Array<DMXValueParameter*> valueParams;
+
+	virtual void updateValue(int channel, uint8 value) override;
+	virtual void updateValues(Array<uint8> values) override;
 
 	void onContainerParameterChangedInternal(Parameter*) override;
-
-	bool checkSignature(int net, int subnet, int universe);
-
 	InspectableEditor* getEditorInternal(bool isRoot, Array<Inspectable*> inspectables = Array<Inspectable*>()) override;
-
-
-	String toString() const;
 
 	DECLARE_TYPE("DMXUniverse")
 };

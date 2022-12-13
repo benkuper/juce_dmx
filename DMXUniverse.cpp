@@ -10,24 +10,56 @@
 
 #include "JuceHeader.h"
 
-DMXUniverse::DMXUniverse(bool useParams) :
+DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
+	net(net), subnet(subnet), universe(universe),
+	isDirty(true)
+{
+
+}
+
+bool DMXUniverse::checkSignature(int _net, int _subnet, int _universe)
+{
+	return net == _net && subnet == _subnet && universe == _universe;
+}
+
+void DMXUniverse::updateValue(int channel, uint8 value)
+{
+	jassert(channel >= 0 && channel < DMX_NUM_CHANNELS);
+
+	GenericScopedLock lock(valuesLock);
+	values[channel] = value;
+
+	isDirty = true;
+}
+
+void DMXUniverse::updateValues(Array<uint8> newValues)
+{
+	jassert(newValues.size() == DMX_NUM_CHANNELS);
+
+	GenericScopedLock lock(valuesLock);
+	memcpy(values, newValues.getRawDataPointer(), DMX_NUM_CHANNELS);
+}
+
+
+
+DMXUniverseItem::DMXUniverseItem(bool useParams) :
 	BaseItem("Universe", false, false),
-	useParams(useParams),
-	isDirty(false)
+	DMXUniverse(0, 0, 0),
+	useParams(useParams)
 {
 	editorIsCollapsed = !useParams;
 
-	net = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
-	subnet = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
-	universe = addIntParameter("Universe", "The universe", 0, 0);
+	netParam = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
+	subnetParam = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
+	universeParam = addIntParameter("Universe", "The universe", 0, 0);
 
 	memset(values, 0, DMX_NUM_CHANNELS);
 
 	if (useParams)
 	{
-		net->hideInEditor = true;
-		subnet->hideInEditor = true;
-		universe->hideInEditor = true;
+		netParam->hideInEditor = true;
+		subnetParam->hideInEditor = true;
+		universeParam->hideInEditor = true;
 
 		for (int i = 0; i < DMX_NUM_CHANNELS; i++)
 		{
@@ -38,77 +70,73 @@ DMXUniverse::DMXUniverse(bool useParams) :
 	}
 }
 
-DMXUniverse::~DMXUniverse()
-{
-
-}
-
-void DMXUniverse::updateValue(int channel, uint8 value)
-{
-	jassert(channel >= 0 && channel < DMX_NUM_CHANNELS);
-
-	if (useParams) valueParams[channel]->setValue(value);
-	else values[channel] = value;
-
-	isDirty = true;
-}
-
-void DMXUniverse::updateValues(Array<uint8> newValues)
-{
-	jassert(newValues.size() == DMX_NUM_CHANNELS);
-
-	if (useParams)
-	{
-		for (int i = 0; i < DMX_NUM_CHANNELS; ++i)
-		{
-			if (DMXValueParameter* vp = valueParams[i])
-			{
-				if (vp->type == DMXByteOrder::BIT8) vp->setValue(newValues[i]);
-				else if (i < DMX_NUM_CHANNELS - 1)
-				{
-					vp->setValueFrom2Channels(newValues[i], newValues[i + 1]);
-					i++;
-				}
-			}
-		}
-	}
-	else
-	{
-		memcpy(values, newValues.getRawDataPointer(), DMX_NUM_CHANNELS);
-	}
-
-}
-
-void DMXUniverse::onContainerParameterChangedInternal(Parameter* p)
-{
-	if (!useParams) return;
-	if (p == net || p == subnet || p == universe) return;
-
-	int index = valueParams.indexOf((DMXValueParameter*)p);
-	jassert(index >= 0);
-
-	GenericScopedLock lock(valueLock);
-	values[index] = p->intValue();
-
-	isDirty = true;
-
-}
-
-bool DMXUniverse::checkSignature(int _net, int _subnet, int _universe)
-{
-	return net->intValue() == _net && subnet->intValue() == _subnet && universe->intValue() == _universe;
-}
-
-InspectableEditor* DMXUniverse::getEditorInternal(bool isRoot, Array<Inspectable*> inspectables)
-{
-	if (inspectables.isEmpty()) inspectables.add(this);
-	return new DMXUniverseEditor(inspectables, isRoot);
-}
 
 String DMXUniverse::toString() const
 {
-	return "[Net : " + net->stringValue() + ", Subnet" + subnet->stringValue() + ", Universe : " + universe->stringValue() + "]";
+	return "[Net : " + String(net) + ", Subnet" + String(subnet) + ", Universe : " + String(universe) + "]";
 }
+
+DMXUniverseItem::~DMXUniverseItem()
+{
+
+}
+
+
+void DMXUniverseItem::updateValue(int channel, uint8 value)
+{
+	if (!useParams)
+	{
+		DMXUniverse::updateValue(channel, value);
+		return;
+	}
+
+	jassert(channel >= 0 && channel < DMX_NUM_CHANNELS);
+	valueParams[channel]->setValue(value);
+}
+
+void DMXUniverseItem::updateValues(Array<uint8> newValues)
+{
+	if (!useParams)
+	{
+		DMXUniverse::updateValues(newValues);
+		return;
+	}
+
+	jassert(newValues.size() == DMX_NUM_CHANNELS);
+
+	for (int i = 0; i < DMX_NUM_CHANNELS; ++i)
+	{
+		if (DMXValueParameter* vp = valueParams[i])
+		{
+			if (vp->type == DMXByteOrder::BIT8) vp->setValue(newValues[i]);
+			else if (i < DMX_NUM_CHANNELS - 1)
+			{
+				vp->setValueFrom2Channels(newValues[i], newValues[i + 1]);
+				i++;
+			}
+		}
+	}
+}
+
+
+void DMXUniverseItem::onContainerParameterChangedInternal(Parameter* p)
+{
+	if (p == netParam) net = netParam->intValue();
+	else if (p == subnetParam) subnet = subnetParam->intValue();
+	else if (p == universeParam) universe = universeParam->intValue();
+
+	if (!useParams) return;
+	int index = valueParams.indexOf((DMXValueParameter*)p);
+	DMXUniverse::updateValue(index, p->intValue());
+
+}
+
+InspectableEditor* DMXUniverseItem::getEditorInternal(bool isRoot, Array<Inspectable*> inspectables)
+{
+	if (inspectables.isEmpty()) inspectables.add(this);
+	return new DMXUniverseItemEditor(inspectables, isRoot);
+}
+
 
 ControllableUI* DMXValueParameter::createDefaultUI(Array<Controllable*> controllables)
 {

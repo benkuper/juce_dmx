@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-	DMXUniverseEditor.cpp
+	DMXUniverseItemEditor.cpp
 	Created: 10 Dec 2022 8:54:52pm
 	Author:  bkupe
 
@@ -10,24 +10,24 @@
 
 #include "Common/CommonIncludes.h"
 
-DMXUniverseEditor::DMXUniverseEditor(Array<Inspectable*> inspectables, bool isRoot) :
+DMXUniverseItemEditor::DMXUniverseItemEditor(Array<Inspectable*> inspectables, bool isRoot) :
 	BaseItemEditor(Inspectable::getArrayAs<Inspectable, BaseItem>(inspectables), isRoot),
-	dmxUniverse(inspectables.size() > 0 ? dynamic_cast<DMXUniverse*>(inspectables[0]) : nullptr)
+	dmxUniverse(inspectables.size() > 0 ? dynamic_cast<DMXUniverseItem*>(inspectables[0]) : nullptr)
 {
-	netUI.reset(dmxUniverse->net->createLabelUI());
-	subnetUI.reset(dmxUniverse->subnet->createLabelUI());
-	universeUI.reset(dmxUniverse->universe->createLabelUI());
+	netUI.reset(dmxUniverse->netParam->createLabelUI());
+	subnetUI.reset(dmxUniverse->subnetParam->createLabelUI());
+	universeUI.reset(dmxUniverse->universeParam->createLabelUI());
 
 	addAndMakeVisible(netUI.get());
 	addAndMakeVisible(subnetUI.get());
 	addAndMakeVisible(universeUI.get());
 }
 
-DMXUniverseEditor::~DMXUniverseEditor()
+DMXUniverseItemEditor::~DMXUniverseItemEditor()
 {
 }
 
-void DMXUniverseEditor::resizedInternalHeaderItemInternal(Rectangle<int>& r)
+void DMXUniverseItemEditor::resizedInternalHeaderItemInternal(Rectangle<int>& r)
 {
 	universeUI->setBounds(r.removeFromRight(100).reduced(3));
 	r.removeFromRight(2);

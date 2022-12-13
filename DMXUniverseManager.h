@@ -11,7 +11,7 @@
 #pragma once
 
 class DMXUniverseManager :
-	public BaseManager<DMXUniverse>
+	public BaseManager<DMXUniverseItem>
 {
 public:
 	DMXUniverseManager(bool useParams = false);
@@ -19,5 +19,5 @@ public:
 
 	bool useParams;
 
-	DMXUniverse* createItem() override;
+	DMXUniverseItem* createItem() override;
 };

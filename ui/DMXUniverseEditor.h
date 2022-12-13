@@ -24,14 +24,14 @@ public:
 	void handleMenuSelectedID(int result) override;
 };
 
-class DMXUniverseEditor :
+class DMXUniverseItemEditor :
 	public BaseItemEditor
 {
 public:
-	DMXUniverseEditor(Array<Inspectable*> inspectables, bool isRoot);
-	~DMXUniverseEditor();
+	DMXUniverseItemEditor(Array<Inspectable*> inspectables, bool isRoot);
+	~DMXUniverseItemEditor();
 
-	DMXUniverse* dmxUniverse;
+	DMXUniverseItem* dmxUniverse;
 
 	std::unique_ptr<IntParameterLabelUI> netUI;
 	std::unique_ptr<IntParameterLabelUI> subnetUI;
