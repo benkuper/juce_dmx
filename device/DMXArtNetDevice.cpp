@@ -141,7 +141,7 @@ void DMXArtNetDevice::run()
 		{
 			for (uint8 i = 0; i < 8; ++i)
 			{
-				DBG("Check " << (char)receiveBuffer[i] << " <> " << (char)artnetPacket[i]);
+				//DBG("Check " << (char)receiveBuffer[i] << " <> " << (char)artnetPacket[i]);
 				if (receiveBuffer[i] != artnetPacket[i])
 				{
 					if (receiveBuffer[i] != artextPacket[i])

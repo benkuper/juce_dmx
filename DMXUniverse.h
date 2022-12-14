@@ -87,10 +87,13 @@ public:
 	bool isDirty;
 
 	SpinLock valuesLock;
-	uint8 values[DMX_NUM_CHANNELS];
-	virtual void updateValue(int channel, uint8 value);
-	virtual void updateValues(Array<uint8> values);
-	
+	Array<uint8> values;
+	virtual void updateValue(int channel, uint8 value, bool dirtyIfDifferent = false);
+	virtual void updateValues(Array<uint8> values, bool dirtyIfDifferent = false);
+
+	int getUniverseIndex();
+	static int getUniverseIndex(int net, int subnet, int universe);
+
 	bool checkSignature(int net, int subnet, int universe);
 	String toString() const;
 };
@@ -111,8 +114,8 @@ public:
 	bool useParams;
 	Array<DMXValueParameter*> valueParams;
 
-	virtual void updateValue(int channel, uint8 value) override;
-	virtual void updateValues(Array<uint8> values) override;
+	virtual void updateValue(int channel, uint8 value, bool dirtyIfDifferent = false) override;
+	virtual void updateValues(Array<uint8> values, bool dirtyIfDifferent = false) override;
 
 	void onContainerParameterChangedInternal(Parameter*) override;
 	InspectableEditor* getEditorInternal(bool isRoot, Array<Inspectable*> inspectables = Array<Inspectable*>()) override;

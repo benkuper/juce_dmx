@@ -97,7 +97,7 @@ void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, Array<uint8> v
 void DMXDevice::sendDMXValues(DMXUniverse* u)
 {
 	if (!outputCC->enabled->boolValue()) return;
-	sendDMXValues(u->net, u->subnet, u->universe, u->values);
+	sendDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer());
 }
 
 void DMXDevice::sendDMXValues(int net, int subnet, int universe, uint8* values)

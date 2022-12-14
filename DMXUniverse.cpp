@@ -9,12 +9,23 @@
 */
 
 #include "JuceHeader.h"
+#include "DMXUniverse.h"
 
 DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
 	net(net), subnet(subnet), universe(universe),
 	isDirty(true)
 {
+	values.resize(DMX_NUM_CHANNELS);
+}
 
+int DMXUniverse::getUniverseIndex()
+{
+	return DMXUniverse::getUniverseIndex(net, subnet, universe);
+}
+
+int DMXUniverse::getUniverseIndex(int net, int subnet, int universe)
+{
+	return universe | subnet << 4 | net << 8;;
 }
 
 bool DMXUniverse::checkSignature(int _net, int _subnet, int _universe)
@@ -22,22 +33,28 @@ bool DMXUniverse::checkSignature(int _net, int _subnet, int _universe)
 	return net == _net && subnet == _subnet && universe == _universe;
 }
 
-void DMXUniverse::updateValue(int channel, uint8 value)
+void DMXUniverse::updateValue(int channel, uint8 value, bool dirtyIfDifferent)
 {
 	jassert(channel >= 0 && channel < DMX_NUM_CHANNELS);
 
 	GenericScopedLock lock(valuesLock);
-	values[channel] = value;
 
+	if (dirtyIfDifferent && values[channel] == value) return;
+	
+	values.set(channel, value);
 	isDirty = true;
 }
 
-void DMXUniverse::updateValues(Array<uint8> newValues)
+void DMXUniverse::updateValues(Array<uint8> newValues, bool dirtyIfDifferent)
 {
 	jassert(newValues.size() == DMX_NUM_CHANNELS);
 
 	GenericScopedLock lock(valuesLock);
-	memcpy(values, newValues.getRawDataPointer(), DMX_NUM_CHANNELS);
+
+	if (dirtyIfDifferent && values == newValues) return;
+
+	values.swapWith(newValues);
+	isDirty = true;
 }
 
 
@@ -52,8 +69,6 @@ DMXUniverseItem::DMXUniverseItem(bool useParams) :
 	netParam = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
 	subnetParam = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
 	universeParam = addIntParameter("Universe", "The universe", 0, 0);
-
-	memset(values, 0, DMX_NUM_CHANNELS);
 
 	if (useParams)
 	{
@@ -82,11 +97,13 @@ DMXUniverseItem::~DMXUniverseItem()
 }
 
 
-void DMXUniverseItem::updateValue(int channel, uint8 value)
+void DMXUniverseItem::updateValue(int channel, uint8 value, bool dirtyIfDifferent)
 {
+	jassert(channel >= 0 && channel < DMX_NUM_CHANNELS);
+
 	if (!useParams)
 	{
-		DMXUniverse::updateValue(channel, value);
+		DMXUniverse::updateValue(channel, value, dirtyIfDifferent);
 		return;
 	}
 
@@ -94,11 +111,11 @@ void DMXUniverseItem::updateValue(int channel, uint8 value)
 	valueParams[channel]->setValue(value);
 }
 
-void DMXUniverseItem::updateValues(Array<uint8> newValues)
+void DMXUniverseItem::updateValues(Array<uint8> newValues, bool dirtyIfDifferent)
 {
 	if (!useParams)
 	{
-		DMXUniverse::updateValues(newValues);
+		DMXUniverse::updateValues(newValues, dirtyIfDifferent);
 		return;
 	}
 
