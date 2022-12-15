@@ -18,6 +18,11 @@ DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
 	values.resize(DMX_NUM_CHANNELS);
 }
 
+DMXUniverse::DMXUniverse(int universeIndex) :
+	DMXUniverse((universeIndex >> 8) & 0xf, (universeIndex >> 4) & 0xf, universeIndex & 0x7f)
+{
+}
+
 int DMXUniverse::getUniverseIndex()
 {
 	return DMXUniverse::getUniverseIndex(net, subnet, universe);

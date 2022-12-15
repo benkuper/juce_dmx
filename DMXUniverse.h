@@ -79,6 +79,7 @@ class DMXUniverse
 {
 public:
 	DMXUniverse(int net, int subnet, int universe);
+	DMXUniverse(int universeIndex);
 
 	int net;
 	int subnet;
