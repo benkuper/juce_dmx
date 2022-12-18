@@ -34,6 +34,8 @@ public:
 	void setConnected(bool value);
 	virtual void refreshEnabled() {};
 
+	virtual void setupMulticast(Array<DMXUniverse*> multicastIn, Array<DMXUniverse*> multicastOut) {}
+
 	//virtual void sendDMXValue(int net, int subnet, int universe, int channel, int value);
 	//virtual void sendDMXRange(int net, int subnet, int universe, int startChannel, Array<int> values);
 	virtual void sendDMXValues(DMXUniverse* u);

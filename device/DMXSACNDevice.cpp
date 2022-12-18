@@ -9,6 +9,7 @@
 */
 
 #include "JuceHeader.h"
+#include "DMXSACNDevice.h"
 
 DMXSACNDevice::DMXSACNDevice() :
 	DMXDevice("SACN", SACN, true),
@@ -87,6 +88,32 @@ void DMXSACNDevice::setupSender()
 
 	e131_pkt_init(&senderPacket, 0, 512);
 	memcpy(&senderPacket.frame.source_name, nodeName->stringValue().getCharPointer(), nodeName->stringValue().length());
+}
+
+void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> out)
+{
+	//Receiver
+	if (receiver != nullptr) for (auto& i : multicastIn) receiver->leaveMulticast(i);
+
+	multicastIn.clear();
+	for (auto& u : in)
+	{
+		String s = getMulticastIPForUniverse(u->universe);
+		multicastIn.add(s);
+		if (receiver != nullptr) receiver->joinMulticast(s);
+	}
+
+
+	//Sender
+	for (auto& i : multicastIn) sender.leaveMulticast(i);
+
+	multicastOut.clear();
+	for (auto& u : out)
+	{
+		String s = getMulticastIPForUniverse(u->universe);
+		multicastOut.add(s);
+		sender.joinMulticast(s);
+	}
 }
 
 //void DMXSACNDevice::sendDMXValue(int channel, int value)

@@ -69,7 +69,7 @@ DMXUniverseItem::DMXUniverseItem(bool useParams) :
 	DMXUniverse(0, 0, 0),
 	useParams(useParams)
 {
-	editorIsCollapsed = !useParams;
+	editorIsCollapsed = useParams;
 
 	netParam = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
 	subnetParam = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
