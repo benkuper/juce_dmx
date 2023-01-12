@@ -80,7 +80,8 @@ class DMXUniverse
 public:
 	DMXUniverse(int net, int subnet, int universe);
 	DMXUniverse(int universeIndex);
-
+    virtual ~DMXUniverse() {}
+    
 	int net;
 	int subnet;
 	int universe;
