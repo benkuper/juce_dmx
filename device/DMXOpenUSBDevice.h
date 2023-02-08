@@ -17,6 +17,7 @@ public:
 	DMXOpenUSBDevice();
 	~DMXOpenUSBDevice();
 
+	uint32 prevMillis = 0;
 	const uint8 startCode[1]{ 0 };
 
 	void setPortConfig() override;

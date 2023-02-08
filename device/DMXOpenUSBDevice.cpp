@@ -37,6 +37,7 @@ void DMXOpenUSBDevice::setPortConfig()
 		dmxPort->port->setStopbits(serial::stopbits_two);
 		dmxPort->port->setParity(serial::parity_none);
 		dmxPort->port->setFlowcontrol(serial::flowcontrol_none);
+		dmxPort->port->setBreak(false);
 		dmxPort->port->setRTS(false);
 		dmxPort->port->setDTR(false);
 		dmxPort->port->flush();
@@ -90,6 +91,8 @@ void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int univ
 		dmxPort->port->setBreak(false);
 		dmxPort->port->write(startCode, 1); //start code
 		dmxPort->port->write(values, DMX_NUM_CHANNELS);
+		long t = Time::getMillisecondCounter();
+		prevMillis = t;
 	}
 	catch (serial::IOException e)
 	{
