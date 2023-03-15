@@ -9,7 +9,6 @@
 */
 
 #include "JuceHeader.h"
-#include "DMXUniverse.h"
 
 DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
 	net(net), subnet(subnet), universe(universe),
@@ -21,6 +20,12 @@ DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
 DMXUniverse::DMXUniverse(int universeIndex) :
 	DMXUniverse((universeIndex >> 8) & 0xf, (universeIndex >> 4) & 0xf, universeIndex & 0x7f)
 {
+}
+
+DMXUniverse::DMXUniverse(DMXUniverse* uc) :
+	net(uc->net), subnet(uc->subnet), universe(uc->universe), isDirty(uc->isDirty)
+{
+	values = Array<uint8>(uc->values);
 }
 
 int DMXUniverse::getUniverseIndex()
@@ -45,7 +50,7 @@ void DMXUniverse::updateValue(int channel, uint8 value, bool dirtyIfDifferent)
 	GenericScopedLock lock(valuesLock);
 
 	if (dirtyIfDifferent && values[channel] == value) return;
-	
+
 	values.set(channel, value);
 	isDirty = true;
 }
