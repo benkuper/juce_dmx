@@ -172,8 +172,10 @@ void DMXArtNetDevice::run()
 				//LOG("Received with universe : " << universe << "/" << subnet << "/" << net);
 
 
+#if JUCE_DEBUG
 				int dmxDataLength = receiveBuffer[17] | receiveBuffer[16] << 8;
 				jassert(dmxDataLength == DMX_NUM_CHANNELS);
+#endif
 
 				String sName = rAddress + ":" + String(rPort);
 				Array<uint8> values = Array<uint8>(receiveBuffer + DMX_HEADER_LENGTH, DMX_NUM_CHANNELS);
