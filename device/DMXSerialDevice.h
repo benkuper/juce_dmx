@@ -49,5 +49,5 @@ public:
 	virtual void portOpened(SerialDevice *) override;
 	virtual void portClosed(SerialDevice *) override;
 	virtual void portRemoved(SerialDevice *) override;
-	virtual void serialDataReceived(const var &data) override;
+	virtual void serialDataReceived(SerialDevice* device, const var &data) override;
 };

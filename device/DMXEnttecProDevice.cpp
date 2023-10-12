@@ -65,7 +65,7 @@ void DMXEnttecProDevice::sendDMXValuesSerialInternal(int net, int subnet, int un
 //}
 
 
-void DMXEnttecProDevice::serialDataReceived(const var& data)
+void DMXEnttecProDevice::serialDataReceived(SerialDevice* device, const var& data)
 {
 	if (!inputCC->enabled->boolValue()) return;
 	if (!data.isBinaryData()) {

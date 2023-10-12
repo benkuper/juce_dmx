@@ -42,7 +42,7 @@ public:
 	void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values) override;
 
 
-	void serialDataReceived(const var& data) override;
+	void serialDataReceived(SerialDevice* device, const var& data) override;
 	Array<uint8> getDMXPacket(Array<uint8> bytes, int& endIndex);
 	void processDMXPacket(Array<uint8> bytes);
 	void readDMXPacket(Array<uint8> bytes, int expectedDataLength);

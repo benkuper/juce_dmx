@@ -160,6 +160,6 @@ void DMXSerialDevice::portRemoved(SerialDevice*)
 	setCurrentPort(nullptr);
 }
 
-void DMXSerialDevice::serialDataReceived(const var&)
+void DMXSerialDevice::serialDataReceived(SerialDevice*, const var&)
 {
 }
