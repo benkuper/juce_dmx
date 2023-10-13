@@ -95,7 +95,7 @@ void DMXArtNetDevice::setupReceiver()
 //
 //}
 
-void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values)
+void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	sequenceNumber = (sequenceNumber + 1) % 256;
 
@@ -106,9 +106,9 @@ void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, u
 	artnetPacket[16] = 2;
 	artnetPacket[17] = 0;
 
-	memcpy(artnetPacket + DMX_HEADER_LENGTH, values, DMX_NUM_CHANNELS);
+	memcpy(artnetPacket + DMX_HEADER_LENGTH, values, numChannels);
 
-	sender.write(remoteHost->stringValue(), remotePort->intValue(), artnetPacket, 530);
+	sender.write(remoteHost->stringValue(), remotePort->intValue(), artnetPacket, 18 + numChannels);
 }
 //void DMXArtNetDevice::endLoadFile()
 //{

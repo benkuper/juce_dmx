@@ -94,17 +94,17 @@ void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, Array<uint8> v
 	dmxDeviceListeners.call(&DMXDeviceListener::dmxDataInChanged, net, subnet, universe, values, sourceName);
 }
 
-void DMXDevice::sendDMXValues(DMXUniverse* u)
+void DMXDevice::sendDMXValues(DMXUniverse* u, int numChannels)
 {
 	if (!outputCC->enabled->boolValue()) return;
-	sendDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer());
+	sendDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), numChannels);
 }
 
-void DMXDevice::sendDMXValues(int net, int subnet, int universe, uint8* values)
+void DMXDevice::sendDMXValues(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	if (!outputCC->enabled->boolValue()) return;
 	ScopedLock lock(dmxLock);
-	sendDMXValuesInternal(net, subnet, universe, values);
+	sendDMXValuesInternal(net, subnet, universe, values, jmin(numChannels, DMX_NUM_CHANNELS));
 }
 
 

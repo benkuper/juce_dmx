@@ -36,7 +36,7 @@ void DMXEnttecProDevice::setPortConfig()
 	dmxPort->port->write(changeAlwaysData, 6); //to avoid blocking the dmxPro on send
 }
 
-void DMXEnttecProDevice::sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values)
+void DMXEnttecProDevice::sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	if (dmxPort == nullptr || dmxPort->port == nullptr)
 	{
@@ -44,8 +44,9 @@ void DMXEnttecProDevice::sendDMXValuesSerialInternal(int net, int subnet, int un
 		return;
 	}
 
+	const uint8 sendHeaderData[5]{ DMXPRO_START_MESSAGE,DMXPRO_SEND_LABEL,(uint8)((numChannels + 1) & 255),(uint8)(((numChannels + 1) >> 8) & 255), DMXPRO_START_CODE};
 	dmxPort->port->write(sendHeaderData, 5);
-	dmxPort->port->write(values, DMX_NUM_CHANNELS);
+	dmxPort->port->write(values, numChannels);
 	dmxPort->port->write(sendFooterData, 1);
 	dmxPort->port->flush();
 

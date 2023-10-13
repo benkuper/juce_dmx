@@ -135,11 +135,11 @@ void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> o
 //	DMXDevice::sendDMXRange(startChannel, values);
 //}
 
-void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values)
+void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	//String ip = sendMulticast->boolValue() ? getMulticastIPForUniverse(outputUniverse->intValue()) : remoteHost->stringValue();
 
-	e131_pkt_init(&senderPacket, universe, 512);
+	e131_pkt_init(&senderPacket, universe, numChannels);
 	memcpy(&senderPacket.frame.source_name, nodeName->stringValue().getCharPointer(), nodeName->stringValue().length());
 
 	String ip = remoteHost->stringValue();
@@ -147,7 +147,7 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 	senderPacket.frame.priority = priority->intValue();
 	//senderPacket.frame.universe = universe;
 
-	memcpy(senderPacket.dmp.prop_val + 1, values, DMX_NUM_CHANNELS);
+	memcpy(senderPacket.dmp.prop_val + 1, values, numChannels);
 	int numWritten = sender.write(ip, remotePort->intValue(), &senderPacket, sizeof(e131_packet_t));
 
 	if (numWritten == -1)

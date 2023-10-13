@@ -33,13 +33,13 @@ public:
 
 	Array<uint8> serialBuffer;
 
-	uint8 sendHeaderData[5]{ DMXPRO_START_MESSAGE,DMXPRO_SEND_LABEL,(DMX_NUM_CHANNELS + 1) & 255,((DMX_NUM_CHANNELS + 1) >> 8) & 255, DMXPRO_START_CODE };
+
 	uint8 sendFooterData[1]{ DMXPRO_END_MESSAGE };
 
 	uint8 changeAlwaysData[6]{ DMXPRO_START_MESSAGE,DMXPRO_RECEIVE_ON_CHANGE_LABEL, 1, 0, DMXPRO_CHANGE_ALWAYS_CODE, DMXPRO_END_MESSAGE };
 
 	void setPortConfig() override;
-	void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values) override;
+	void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
 
 
 	void serialDataReceived(SerialDevice* device, const var& data) override;

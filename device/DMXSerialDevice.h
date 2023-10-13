@@ -38,8 +38,8 @@ public:
 	virtual void processIncomingData();
 
 	virtual void initRunLoop() {}
-	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values) override;
-	virtual void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values) = 0;
+	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
+	virtual void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels) = 0;
 
 	virtual void onContainerParameterChanged(Parameter * p) override;
 

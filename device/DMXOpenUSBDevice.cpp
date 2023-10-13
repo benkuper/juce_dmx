@@ -83,14 +83,14 @@ void DMXOpenUSBDevice::setPortConfig()
 
 }
 
-void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values)
+void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	try
 	{
 		dmxPort->port->setBreak(true);
 		dmxPort->port->setBreak(false);
 		dmxPort->port->write(startCode, 1); //start code
-		dmxPort->port->write(values, DMX_NUM_CHANNELS);
+		dmxPort->port->write(values, numChannels);
 		long t = Time::getMillisecondCounter();
 		prevMillis = t;
 	}
