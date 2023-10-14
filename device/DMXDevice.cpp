@@ -27,6 +27,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	if (canReceive)
 	{
 		inputCC = new EnablingControllableContainer("Input");
+		inputCC->enabled->setValue(false);
 		addChildControllableContainer(inputCC, true);
 	}
 
