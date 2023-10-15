@@ -31,7 +31,8 @@ public:
 	EnablingControllableContainer* inputCC;
 	EnablingControllableContainer* outputCC;
 
-	virtual void refreshEnabled() {};
+	virtual void setEnabled(bool value);
+	virtual void refreshEnabled() {}
 
 	void updateConnectedParam();
 	virtual bool shouldHaveConnectionParam();

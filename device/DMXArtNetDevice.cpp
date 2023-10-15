@@ -9,6 +9,7 @@
 */
 
 #include "JuceHeader.h"
+#include "DMXArtNetDevice.h"
 
 DMXArtNetDevice::DMXArtNetDevice() :
 	DMXDevice("ArtNet", ARTNET, true),
@@ -41,6 +42,11 @@ DMXArtNetDevice::~DMXArtNetDevice()
 {
 	//if (Engine::mainEngine != nullptr) Engine::mainEngine->removeEngineListener(this);
 	stopThread(200);
+}
+
+void DMXArtNetDevice::refreshEnabled()
+{
+	setupReceiver();
 }
 
 void DMXArtNetDevice::setupReceiver()

@@ -41,6 +41,7 @@ public:
 	uint8 receiveBuffer[MAX_PACKET_LENGTH];
 
 
+	void refreshEnabled() override;
 	void setupReceiver();
 
 	//void sendDMXValue(int channel, int value) override;

@@ -43,6 +43,11 @@ DMXSACNDevice::~DMXSACNDevice()
 	stopThread(1000);
 }
 
+void DMXSACNDevice::refreshEnabled()
+{
+	setupReceiver();
+}
+
 void DMXSACNDevice::setupReceiver()
 {
 	signalThreadShouldExit();

@@ -56,6 +56,8 @@ public:
 	Array<String> multicastOut;
 
 
+	void refreshEnabled() override;
+
 	void setupReceiver();
 	void setupSender();
 

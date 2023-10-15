@@ -9,6 +9,7 @@
 */
 
 #include "JuceHeader.h"
+#include "DMXDevice.h"
 
 DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	ControllableContainer(name),
@@ -45,6 +46,13 @@ DMXDevice::~DMXDevice()
 	if (DMXManager::getInstanceWithoutCreating() != nullptr) DMXManager::getInstance()->removeDMXManagerListener(this);
 }
 
+
+void DMXDevice::setEnabled(bool value)
+{
+	if (enabled == value) return;
+	enabled = value;
+	refreshEnabled();
+}
 
 void DMXDevice::updateConnectedParam()
 {
