@@ -37,6 +37,8 @@ public:
 
 	virtual void processIncomingData();
 
+	virtual bool shouldHaveConnectionParam() override;
+
 	virtual void initRunLoop() {}
 	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
 	virtual void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels) = 0;

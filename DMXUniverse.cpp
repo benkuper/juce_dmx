@@ -69,17 +69,17 @@ void DMXUniverse::updateValues(Array<uint8> newValues, bool dirtyIfDifferent)
 
 
 
-DMXUniverseItem::DMXUniverseItem(bool useParams) :
+DMXUniverseItem::DMXUniverseItem(bool useParams, int firstUniverse) :
 	BaseItem("Universe", false, false),
-	DMXUniverse(0, 0, 0),
+	DMXUniverse(0, 0, firstUniverse),
 	useParams(useParams)
 {
 	editorIsCollapsed = useParams;
 
 	netParam = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
 	subnetParam = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
-	universeParam = addIntParameter("Universe", "The universe", 0, 0);
-
+	universeParam = addIntParameter("Universe", "The universe", firstUniverse, firstUniverse);
+	
 	if (useParams)
 	{
 		netParam->hideInEditor = true;
@@ -106,6 +106,12 @@ DMXUniverseItem::~DMXUniverseItem()
 
 }
 
+
+void DMXUniverseItem::setFirstUniverse(int firstUniverse)
+{
+	universeParam->setRange(1, INT32_MAX);
+	universe = universeParam->intValue();
+}
 
 void DMXUniverseItem::updateValue(int channel, uint8 value, bool dirtyIfDifferent)
 {
@@ -151,10 +157,12 @@ void DMXUniverseItem::onContainerParameterChangedInternal(Parameter* p)
 	if (p == netParam) net = netParam->intValue();
 	else if (p == subnetParam) subnet = subnetParam->intValue();
 	else if (p == universeParam) universe = universeParam->intValue();
-
-	if (!useParams) return;
-	int index = valueParams.indexOf((DMXValueParameter*)p);
-	DMXUniverse::updateValue(index, p->intValue());
+	else
+	{
+		if (!useParams) return;
+		int index = valueParams.indexOf((DMXValueParameter*)p);
+		DMXUniverse::updateValue(index, p->intValue());
+	}
 
 }
 

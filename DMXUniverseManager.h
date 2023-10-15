@@ -18,6 +18,9 @@ public:
 	~DMXUniverseManager();
 
 	bool useParams;
+	int firstUniverse;
 
 	DMXUniverseItem* createItem() override;
+
+	void setFirstUniverse(int index);
 };

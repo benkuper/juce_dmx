@@ -33,6 +33,7 @@ DMXArtNetDevice::DMXArtNetDevice() :
 
 	sender.bindToPort(0);
 
+	updateConnectedParam();
 	setupReceiver();
 }
 
@@ -45,7 +46,6 @@ DMXArtNetDevice::~DMXArtNetDevice()
 void DMXArtNetDevice::setupReceiver()
 {
 	stopThread(500);
-	setConnected(false);
 	if (receiver != nullptr) receiver->shutdown();
 
 	if (!inputCC->enabled->boolValue())
@@ -53,6 +53,8 @@ void DMXArtNetDevice::setupReceiver()
 		clearWarning();
 		return;
 	}
+
+	if(isConnected != nullptr) isConnected->setValue(false);
 
 	receiver.reset(new DatagramSocket());
 	bool result = receiver->bindToPort(localPort->intValue());
@@ -69,7 +71,7 @@ void DMXArtNetDevice::setupReceiver()
 	}
 
 	startThread();
-	setConnected(true);
+	isConnected->setValue(true);
 }
 
 //void DMXArtNetDevice::sendDMXValue(int channel, int value)

@@ -34,9 +34,9 @@
 //==============================================================================
 
 #ifdef _MSC_VER
- #pragma warning (push)
- // Disable warnings for long class names, padding, and undefined preprocessor definitions.
- #pragma warning (disable: 4251 4786 4668 4820)
+#pragma warning (push)
+// Disable warnings for long class names, padding, and undefined preprocessor definitions.
+#pragma warning (disable: 4251 4786 4668 4820)
 #endif
 
 
@@ -53,7 +53,10 @@ using namespace juce;
 #include "device/DMXArtNetDevice.h"
 #include "device/DMXEnttecProDevice.h"
 #include "device/DMXOpenUSBDevice.h"
+extern "C"
+{
 #include "device/sacn/e131.h"
+}
 #include "device/DMXSACNDevice.h"
 
 #include "ui/DMXUniverseEditor.h"

@@ -25,8 +25,10 @@
 #include "device/DMXArtNetDevice.cpp"
 #include "device/DMXEnttecProDevice.cpp"
 #include "device/DMXOpenUSBDevice.cpp"
-
+extern "C"
+{
 #include "device/sacn/e131.c"
+}
 #include "device/DMXSACNDevice.cpp"
 
 #include "ui/DMXUniverseEditor.cpp"

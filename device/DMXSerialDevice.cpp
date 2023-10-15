@@ -9,6 +9,7 @@
 */
 
 #include "JuceHeader.h"
+#include "DMXSerialDevice.h"
 
 DMXSerialDevice::DMXSerialDevice(const String& name, Type type, bool canReceive) :
 	DMXDevice(name, type, canReceive),
@@ -17,6 +18,9 @@ DMXSerialDevice::DMXSerialDevice(const String& name, Type type, bool canReceive)
 	portParam = new SerialDeviceParameter("Port", "USB Port for the DMX device", true);
 	addParameter(portParam);
 	SerialManager::getInstance()->addSerialManagerListener(this);
+
+	updateConnectedParam();
+
 }
 
 DMXSerialDevice::~DMXSerialDevice()
@@ -31,10 +35,9 @@ DMXSerialDevice::~DMXSerialDevice()
 
 bool DMXSerialDevice::setPortStatus(bool status)
 {
-
 	if (dmxPort == nullptr)
 	{
-		setConnected(false);
+		isConnected->setValue(false);
 		return false;
 	}
 
@@ -48,7 +51,6 @@ bool DMXSerialDevice::setPortStatus(bool status)
 		if (!dmxPort->isOpen())
 		{
 			NLOGERROR(niceName, "Could not open port : " << dmxPort->info->port);
-			dmxDeviceListeners.call(&DMXDeviceListener::dmxDeviceDisconnected);
 			dmxPort = nullptr; //Avoid crash if SerialPort is busy
 		}
 		else
@@ -63,7 +65,7 @@ bool DMXSerialDevice::setPortStatus(bool status)
 		if (dmxPort->isOpen()) dmxPort->close();
 	}
 
-	setConnected(dmxPort->isOpen());
+	isConnected->setValue(dmxPort->isOpen());
 	return dmxPort->isOpen();
 }
 
@@ -92,11 +94,17 @@ void DMXSerialDevice::setCurrentPort(SerialDevice* port)
 		dmxPort->addSerialDeviceListener(this);
 		lastOpenedPortID = dmxPort->info->deviceID;
 	}
+
 }
 
 void DMXSerialDevice::processIncomingData()
 {
 	DBG("Incoming data, process function not overriden, doing nothing.");
+}
+
+bool DMXSerialDevice::shouldHaveConnectionParam()
+{
+	return true;
 }
 
 void DMXSerialDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)

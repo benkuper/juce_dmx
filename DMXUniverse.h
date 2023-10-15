@@ -108,7 +108,7 @@ class DMXUniverseItem :
 	public DMXUniverse
 {
 public:
-	DMXUniverseItem(bool useParams = false);
+	DMXUniverseItem(bool useParams = false, int firstUniverse = 0);
 	~DMXUniverseItem();
 
 	IntParameter* netParam;
@@ -117,6 +117,8 @@ public:
 
 	bool useParams;
 	Array<DMXValueParameter*> valueParams;
+
+	virtual void setFirstUniverse(int firstUniverse);
 
 	virtual void updateValue(int channel, uint8 value, bool dirtyIfDifferent = false) override;
 	virtual void updateValues(Array<uint8> values, bool dirtyIfDifferent = false) override;

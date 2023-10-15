@@ -14,7 +14,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	ControllableContainer(name),
 	type(_type),
 	enabled(true),
-	isConnected(false),
+	isConnected(nullptr),
 	canReceive(canReceive),
 	inputCC(nullptr),
 	outputCC(nullptr)
@@ -37,6 +37,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	//targetRate = outputCC->addIntParameter("Target send rate", "If fixed rate is checked, this is the frequency in Hz of the sending rate", 40, 1, 20000);
 	//
 	//if (alwaysSend->boolValue()) startTimer(1000/targetRate->intValue());
+
 }
 
 DMXDevice::~DMXDevice()
@@ -44,19 +45,28 @@ DMXDevice::~DMXDevice()
 	if (DMXManager::getInstanceWithoutCreating() != nullptr) DMXManager::getInstance()->removeDMXManagerListener(this);
 }
 
-void DMXDevice::setConnected(bool value)
-{
-	if (isConnected == value) return;
-	isConnected = value;
 
-	if (isConnected)
+void DMXDevice::updateConnectedParam()
+{
+	if (shouldHaveConnectionParam())
 	{
-		dmxDeviceListeners.call(&DMXDeviceListener::dmxDeviceConnected);
+		isConnected = addBoolParameter("Connected", "If checked, the device is connected", false);
+		isConnected->isControllableFeedbackOnly = true;
+		isConnected->isSavable = false;
+		isConnected->hideInEditor = true;
 	}
 	else
 	{
-		dmxDeviceListeners.call(&DMXDeviceListener::dmxDeviceDisconnected);
+		removeControllable(isConnected);
+		isConnected = nullptr;
 	}
+
+	dmxDeviceListeners.call(&DMXDeviceListener::dmxDeviceSetupChanged, this);
+}
+
+bool DMXDevice::shouldHaveConnectionParam()
+{
+	return canReceive && inputCC != nullptr && inputCC->enabled->boolValue();
 }
 
 //void DMXDevice::sendDMXValue(int channel, int value) //channel 1-512
@@ -92,7 +102,18 @@ void DMXDevice::setConnected(bool value)
 void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, Array<uint8> values, const String& sourceName)
 {
 	jassert(values.size() == DMX_NUM_CHANNELS);
-	dmxDeviceListeners.call(&DMXDeviceListener::dmxDataInChanged, net, subnet, universe, values, sourceName);
+	dmxDeviceListeners.call(&DMXDeviceListener::dmxDataInChanged, this, net, subnet, universe, values, sourceName);
+}
+
+
+void DMXDevice::onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c)
+{
+	if (cc == inputCC && c == inputCC->enabled) updateConnectedParam();
+}
+
+int DMXDevice::getFirstUniverse()
+{
+	return 0;
 }
 
 void DMXDevice::sendDMXValues(DMXUniverse* u, int numChannels)

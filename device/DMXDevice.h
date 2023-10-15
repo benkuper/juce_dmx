@@ -22,7 +22,7 @@ public:
 	Type type;
 
 	bool enabled;
-	bool isConnected;
+	BoolParameter* isConnected;
 
 	CriticalSection dmxLock;
 
@@ -31,8 +31,10 @@ public:
 	EnablingControllableContainer* inputCC;
 	EnablingControllableContainer* outputCC;
 
-	void setConnected(bool value);
 	virtual void refreshEnabled() {};
+
+	void updateConnectedParam();
+	virtual bool shouldHaveConnectionParam();
 
 	virtual void setupMulticast(Array<DMXUniverse*> multicastIn, Array<DMXUniverse*> multicastOut) {}
 
@@ -44,6 +46,10 @@ public:
 
 	void setDMXValuesIn(int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "");
 
+	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
+
+	virtual int getFirstUniverse();
+
 	virtual void clearDevice();
 
 	static DMXDevice* create(Type type);
@@ -53,9 +59,8 @@ public:
 	public:
 		virtual ~DMXDeviceListener() {}
 
-		virtual void dmxDeviceConnected() {}
-		virtual void dmxDeviceDisconnected() {}
-		virtual void dmxDataInChanged(int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "") {}
+		virtual void dmxDeviceSetupChanged(DMXDevice* device) {}
+		virtual void dmxDataInChanged(DMXDevice*, int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "") {}
 	};
 
 	ListenerList<DMXDeviceListener> dmxDeviceListeners;

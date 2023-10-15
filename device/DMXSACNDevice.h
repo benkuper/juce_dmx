@@ -40,18 +40,21 @@ public:
 	IntParameter* priority;
 
 	//Receiver
+	//int receiverHandle;
 	std::unique_ptr<DatagramSocket> receiver;
 	e131_packet_t receivedPacket;
 	e131_error_t receivedError;
 	uint8_t receivedSeq = 0x00;
 
 	//Sender
-	DatagramSocket sender;
-	e131_packet_t senderPacket;
+	int senderHandle;
+	HashMap<int, e131_packet_t> senderPackets;
 	e131_addr_t senderDest;
+
 
 	Array<String> multicastIn;
 	Array<String> multicastOut;
+
 
 	void setupReceiver();
 	void setupSender();
@@ -66,6 +69,8 @@ public:
 	//	void endLoadFile() override;
 
 	String getMulticastIPForUniverse(int universe) const;
+
+	int getFirstUniverse() override;
 
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
