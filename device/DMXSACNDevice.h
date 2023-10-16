@@ -49,11 +49,13 @@ public:
 	//Sender
 	int senderHandle;
 	HashMap<int, e131_packet_t> senderPackets;
-	e131_addr_t senderDest;
+	//e131_addr_t senderDest;
+	DatagramSocket sender;
 
 
 	Array<String> multicastIn;
 	Array<String> multicastOut;
+	HashMap<int, String> outMulticastMap;
 
 
 	void refreshEnabled() override;

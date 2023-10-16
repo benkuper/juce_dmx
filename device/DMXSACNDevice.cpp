@@ -68,10 +68,10 @@ void DMXSACNDevice::setupReceiver()
 
 	receiver.reset(new DatagramSocket());
 	bool result = receiver->bindToPort(localPort->intValue());
+
 	if (result)
 	{
 		receiver->setEnablePortReuse(false);
-
 		clearWarning();
 		NLOG(niceName, "Listening for sACN on port " << localPort->intValue());
 	}
@@ -91,7 +91,7 @@ void DMXSACNDevice::setupSender()
 	if (isCurrentlyLoadingData) return;
 	if (!outputCC->enabled->boolValue()) return;
 
-	senderHandle = e131_socket();
+	//senderHandle = e131_socket();
 	//if (sendMulticast->boolValue()) sender.joinMulticast(getMulticastIPForUniverse(outputUniverse->intValue()));
 	//else
 	//sender.leaveMulticast(getMulticastIPForUniverse(outputUniverse->intValue()));
@@ -102,27 +102,29 @@ void DMXSACNDevice::setupSender()
 void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> out)
 {
 	//Receiver
-	//if (receiver != nullptr) for (auto& i : multicastIn) receiver->leaveMulticast(i);
+	if (receiver != nullptr) for (auto& i : multicastIn) receiver->leaveMulticast(i);
 
-	//multicastIn.clear();
-	//for (auto& u : in)
-	//{
-	//	String s = getMulticastIPForUniverse(u->universe);
-	//	multicastIn.add(s);
-	//	if (receiver != nullptr) receiver->joinMulticast(s);
-	//}
+	multicastIn.clear();
+	for (auto& u : in)
+	{
+		String s = getMulticastIPForUniverse(u->universe);
+		multicastIn.add(s);
+		if (receiver != nullptr) receiver->joinMulticast(s);
+	}
 
 
 	////Sender
-	//for (auto& i : multicastIn) sender.leaveMulticast(i);
+	for (auto& i : multicastOut) sender.leaveMulticast(i);
 
-	//multicastOut.clear();
-	//for (auto& u : out)
-	//{
-	//	String s = getMulticastIPForUniverse(u->universe);
-	//	multicastOut.add(s);
-	//	sender.joinMulticast(s);
-	//}
+	multicastOut.clear();
+	outMulticastMap.clear();
+	for (auto& u : out)
+	{
+		String s = getMulticastIPForUniverse(u->universe);
+		multicastOut.add(s);
+		outMulticastMap.set(u->universe, s);
+		//sender.joinMulticast(s);
+	}
 }
 
 //void DMXSACNDevice::sendDMXValue(int channel, int value)
@@ -172,15 +174,18 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 		memcpy(senderPacket->frame.source_name, nodeName->stringValue().getCharPointer(), nodeName->stringValue().length());
 	}
 
-	String ip = remoteHost->stringValue();
-	e131_unicast_dest(&senderDest, remoteHost->stringValue().getCharPointer(), remotePort->intValue());
+	//String ip = remoteHost->stringValue();
+	//e131_unicast_dest(&senderDest, remoteHost->stringValue().getCharPointer(), remotePort->intValue());
 
 	memcpy(senderPacket->dmp.prop_val + 1, values, numChannels);
 
 	e131_error_t e = e131_pkt_validate(senderPacket);
 	if (e != E131_ERR_NONE) LOGWARNING("Packet validation error : " << e131_strerror(e));
 
-	ssize_t sent = e131_send(senderHandle, senderPacket, &senderDest);
+	//ssize_t sent = e131_send(senderHandle, senderPacket, sender.sen);
+	String ip = outMulticastMap.contains(universe) ? outMulticastMap[universe] : remoteHost->stringValue();
+	int sent = sender.write(ip, remotePort->intValue(), senderPacket, sizeof(e131_packet_t));
+
 	if (sent <= 0)
 	{
 		LOGERROR("Error sending sACN data");
