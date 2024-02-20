@@ -107,10 +107,10 @@ bool DMXDevice::shouldHaveConnectionParam()
 //	
 //}
 
-void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, Array<uint8> values, const String& sourceName)
+void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, int priority, Array<uint8> values, const String& sourceName)
 {
 	jassert(values.size() == DMX_NUM_CHANNELS);
-	dmxDeviceListeners.call(&DMXDeviceListener::dmxDataInChanged, this, net, subnet, universe, values, sourceName);
+	dmxDeviceListeners.call(&DMXDeviceListener::dmxDataInChanged, this, net, subnet, universe, priority, values, sourceName);
 }
 
 
@@ -127,14 +127,14 @@ int DMXDevice::getFirstUniverse()
 void DMXDevice::sendDMXValues(DMXUniverse* u, int numChannels)
 {
 	if (!outputCC->enabled->boolValue()) return;
-	sendDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), numChannels);
+	sendDMXValues(u->net, u->subnet, u->universe, u->priority, u->values.getRawDataPointer(), numChannels);
 }
 
-void DMXDevice::sendDMXValues(int net, int subnet, int universe, uint8* values, int numChannels)
+void DMXDevice::sendDMXValues(int net, int subnet, int universe, int priority, uint8* values, int numChannels)
 {
 	if (!outputCC->enabled->boolValue()) return;
 	ScopedLock lock(dmxLock);
-	sendDMXValuesInternal(net, subnet, universe, values, jmin(numChannels, DMX_NUM_CHANNELS));
+	sendDMXValuesInternal(net, subnet, universe, priority, values, jmin(numChannels, DMX_NUM_CHANNELS));
 }
 
 

@@ -103,7 +103,7 @@ void DMXArtNetDevice::setupReceiver()
 //
 //}
 
-void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
+void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, int priority, uint8* values, int numChannels)
 {
 	sequenceNumber = (sequenceNumber + 1) % 256;
 
@@ -187,7 +187,7 @@ void DMXArtNetDevice::run()
 
 				String sName = rAddress + ":" + String(rPort);
 				Array<uint8> values = Array<uint8>(receiveBuffer + DMX_HEADER_LENGTH, DMX_NUM_CHANNELS);
-				setDMXValuesIn(net, subnet, universe, values, sName);
+				setDMXValuesIn(net, subnet, universe, 100, values, sName);
 
 			}
 			break;

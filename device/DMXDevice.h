@@ -42,10 +42,10 @@ public:
 	//virtual void sendDMXValue(int net, int subnet, int universe, int channel, int value);
 	//virtual void sendDMXRange(int net, int subnet, int universe, int startChannel, Array<int> values);
 	virtual void sendDMXValues(DMXUniverse* u, int numChannels = DMX_NUM_CHANNELS);
-	virtual void sendDMXValues(int net, int subnet, int universe, uint8* values, int numChannels = DMX_NUM_CHANNELS);
-	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels = DMX_NUM_CHANNELS) = 0;
+	virtual void sendDMXValues(int net, int subnet, int universe, int priority, uint8* values, int numChannels = DMX_NUM_CHANNELS);
+	virtual void sendDMXValuesInternal(int net, int subnet, int universe, int priority, uint8* values, int numChannels = DMX_NUM_CHANNELS) = 0;
 
-	void setDMXValuesIn(int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "");
+	void setDMXValuesIn(int net, int subnet, int universe, int priority, Array<uint8> values, const String& sourceName = "");
 
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
@@ -61,7 +61,7 @@ public:
 		virtual ~DMXDeviceListener() {}
 
 		virtual void dmxDeviceSetupChanged(DMXDevice* device) {}
-		virtual void dmxDataInChanged(DMXDevice*, int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "") {}
+		virtual void dmxDataInChanged(DMXDevice*, int net, int subnet, int universe, int priority, Array<uint8> values, const String& sourceName = "") {}
 	};
 
 	ListenerList<DMXDeviceListener> dmxDeviceListeners;
