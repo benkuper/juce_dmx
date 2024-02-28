@@ -10,15 +10,15 @@
 
 #include "JuceHeader.h"
 
-DMXUniverse::DMXUniverse(int net, int subnet, int universe) :
-	net(net), subnet(subnet), universe(universe),
+DMXUniverse::DMXUniverse(int net, int subnet, int universe, int priority) :
+	net(net), subnet(subnet), universe(universe), priority(priority),
 	isDirty(true)
 {
 	values.resize(DMX_NUM_CHANNELS);
 }
 
 DMXUniverse::DMXUniverse(int universeIndex) :
-	DMXUniverse((universeIndex >> 8) & 0xf, (universeIndex >> 4) & 0xf, universeIndex & 0x7f)
+	DMXUniverse((universeIndex >> 8) & 0xf, (universeIndex >> 4) & 0xf, universeIndex & 0x7f, 100)
 {
 }
 
@@ -71,7 +71,7 @@ void DMXUniverse::updateValues(Array<uint8> newValues, bool dirtyIfDifferent)
 
 DMXUniverseItem::DMXUniverseItem(bool useParams, int firstUniverse) :
 	BaseItem("Universe", false, false),
-	DMXUniverse(0, 0, firstUniverse),
+	DMXUniverse(0, 0, firstUniverse, 100),
 	useParams(useParams)
 {
 	editorIsCollapsed = useParams;
@@ -79,6 +79,7 @@ DMXUniverseItem::DMXUniverseItem(bool useParams, int firstUniverse) :
 	netParam = addIntParameter("Net", "If appliccable the net for this universe", 0, 0, 15);
 	subnetParam = addIntParameter("Subnet", "If applicable the subnet for this universe", 0, 0, 15);
 	universeParam = addIntParameter("Universe", "The universe", firstUniverse, firstUniverse);
+	priorityParam = addIntParameter("Priority", "The SACN priority of the universe", 100, 0, 200);
 	
 	if (useParams)
 	{
@@ -157,6 +158,7 @@ void DMXUniverseItem::onContainerParameterChangedInternal(Parameter* p)
 	if (p == netParam) net = netParam->intValue();
 	else if (p == subnetParam) subnet = subnetParam->intValue();
 	else if (p == universeParam) universe = universeParam->intValue();
+	else if (p == priorityParam) priority = priorityParam->intValue();
 	else
 	{
 		if (!useParams) return;

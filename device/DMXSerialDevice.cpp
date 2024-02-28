@@ -107,7 +107,7 @@ bool DMXSerialDevice::shouldHaveConnectionParam()
 	return true;
 }
 
-void DMXSerialDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
+void DMXSerialDevice::sendDMXValuesInternal(int net, int subnet, int universe, int priority, uint8* values, int numChannels)
 {
 	if (dmxPort == nullptr) return;
 

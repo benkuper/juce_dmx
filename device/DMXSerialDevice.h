@@ -40,7 +40,7 @@ public:
 	virtual bool shouldHaveConnectionParam() override;
 
 	virtual void initRunLoop() {}
-	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
+	virtual void sendDMXValuesInternal(int net, int subnet, int universe, int priority, uint8* values, int numChannels) override;
 	virtual void sendDMXValuesSerialInternal(int net, int subnet, int universe, uint8* values, int numChannels) = 0;
 
 	virtual void onContainerParameterChanged(Parameter * p) override;
