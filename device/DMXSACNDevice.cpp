@@ -24,10 +24,9 @@ DMXSACNDevice::DMXSACNDevice() :
 
 	nodeName = outputCC->addStringParameter("Node Name", "Name to advertise", "Chataigne");
 	//sendMulticast = outputCC->addBoolParameter("Multicast", "If checked, this will send in Multicast Mode", false);
-	remoteHost = outputCC->addStringParameter("Remote Host", "IP to which send the Art-Net to", "127.0.0.1");
-	remotePort = outputCC->addIntParameter("Remote Port", "Local port to receive SACN data", E131_DEFAULT_PORT, 0, 65535);
+	remoteHost = outputCC->addStringParameter("Remote Host", "IP to which send the sACN to", "127.0.0.1");
+	remotePort = outputCC->addIntParameter("Remote Port", "Local port to send SACN data", E131_DEFAULT_PORT, 0, 65535);
 	//outputUniverse = outputCC->addIntParameter("Universe", "The Universe to send to, from 0 to 15", 1, 1, 64000);
-	priority = outputCC->addIntParameter("Priority", "Priority of the packets to send", 100, 0, 200);
 	setupSender();
 
 	updateConnectedParam();
@@ -147,7 +146,7 @@ void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> o
 //	DMXDevice::sendDMXRange(startChannel, values);
 //}
 
-void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
+void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, int priority, uint8* values, int numChannels)
 {
 	//String ip = sendMulticast->boolValue() ? getMulticastIPForUniverse(outputUniverse->intValue()) : remoteHost->stringValue();
 
@@ -176,6 +175,11 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 
 	//String ip = remoteHost->stringValue();
 	//e131_unicast_dest(&senderDest, remoteHost->stringValue().getCharPointer(), remotePort->intValue());
+	
+	uint8_t priorityValue = (uint8_t)priority;
+	uint8_t* priorityTest = &priorityValue;
+	memcpy(&senderPacket->frame.priority, priorityTest, 1);
+	
 
 	memcpy(senderPacket->dmp.prop_val + 1, values, numChannels);
 
@@ -264,11 +268,12 @@ void DMXSACNDevice::run()
 		receivedSeq = receivedPacket.frame.seq_number;
 
 		int universe = ((receivedPacket.frame.universe >> 8) & 0xFF) | ((receivedPacket.frame.universe & 0xFF) << 8);
+		int priority = receivedPacket.frame.priority;
 		//int numChannels = ((receivedPacket.dmp.prop_val_cnt >> 8) & 0xFF) | ((receivedPacket.dmp.prop_val_cnt & 0xFF) << 8);
 		//int firstChannel = ((receivedPacket.dmp.first_addr >> 8) & 0xFF) | ((receivedPacket.dmp.first_addr & 0xFF) << 8);
 
 		String sName((char*)receivedPacket.frame.source_name);
 
-		setDMXValuesIn(0, 0, universe, Array<uint8>(receivedPacket.dmp.prop_val + 1, DMX_NUM_CHANNELS));
+		setDMXValuesIn(0, 0, universe, priority, Array<uint8>(receivedPacket.dmp.prop_val + 1, DMX_NUM_CHANNELS));
 	}
 }

@@ -78,7 +78,7 @@ public:
 class DMXUniverse
 {
 public:
-	DMXUniverse(int net, int subnet, int universe);
+	DMXUniverse(int net, int subnet, int universe, int priority);
 	DMXUniverse(int universeIndex);
 	DMXUniverse(DMXUniverse* universeToCopy);
 
@@ -87,6 +87,7 @@ public:
 	int net;
 	int subnet;
 	int universe;
+	int priority;
 
 	bool isDirty;
 
@@ -114,6 +115,7 @@ public:
 	IntParameter* netParam;
 	IntParameter* subnetParam;
 	IntParameter* universeParam;
+	IntParameter* priorityParam;
 
 	bool useParams;
 	Array<DMXValueParameter*> valueParams;
