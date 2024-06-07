@@ -64,12 +64,7 @@ public:
 		virtual void dmxDataInChanged(DMXDevice*, int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "") {}
 	};
 
-	ListenerList<DMXDeviceListener> dmxDeviceListeners;
-	void addDMXDeviceListener(DMXDeviceListener* newListener) { dmxDeviceListeners.add(newListener); }
-	void removeDMXDeviceListener(DMXDeviceListener* listener) {
-		if (isBeingDestroyed) return;
-		dmxDeviceListeners.remove(listener); 
-	}
+	DECLARE_INSPECTACLE_CRITICAL_LISTENER(DMXDevice, dmxDevice);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DMXDevice)
 
