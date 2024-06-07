@@ -66,7 +66,10 @@ public:
 
 	ListenerList<DMXDeviceListener> dmxDeviceListeners;
 	void addDMXDeviceListener(DMXDeviceListener* newListener) { dmxDeviceListeners.add(newListener); }
-	void removeDMXDeviceListener(DMXDeviceListener* listener) { dmxDeviceListeners.remove(listener); }
+	void removeDMXDeviceListener(DMXDeviceListener* listener) {
+		if (isBeingDestroyed) return;
+		dmxDeviceListeners.remove(listener); 
+	}
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DMXDevice)
 
