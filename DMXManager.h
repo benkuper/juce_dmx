@@ -16,7 +16,7 @@
 #define ARTNET_FULL_INFO 1
 #define ARTNET_SPECIFIC_INFO 2
 
-class DMXManager :
+class DMXManager
 	//public Timer,
 	//public Thread
 {
