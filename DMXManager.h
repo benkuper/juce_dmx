@@ -17,15 +17,15 @@
 #define ARTNET_SPECIFIC_INFO 2
 
 class DMXManager :
-	public Timer,
-	public Thread
+	//public Timer,
+	//public Thread
 {
 public:
 	juce_DeclareSingleton(DMXManager, true)
 	DMXManager();
 	~DMXManager();
 
-	DatagramSocket artNetUDP;
+	//DatagramSocket artNetUDP;
 	void checkForArtNetDevices();
 	void sendArtNetPollRequest(int type);
 
@@ -40,8 +40,8 @@ public:
 	void addDMXManagerListener(DMXManagerListener* newListener) { dmxManagerListeners.add(newListener); }
 	void removeDMXManagerListener(DMXManagerListener* listener) { dmxManagerListeners.remove(listener); }
 
-	void timerCallback() override;
+	//void timerCallback() override;
 
-	// Inherited via Thread
-	virtual void run() override;
+	 //Inherited via Thread
+	//virtual void run() override;
 };
