@@ -63,10 +63,11 @@ void DMXArtNetDevice::setupReceiver()
 	if(isConnected != nullptr) isConnected->setValue(false);
 
 	receiver.reset(new DatagramSocket());
+	receiver->setEnablePortReuse(true);
 	bool result = receiver->bindToPort(localPort->intValue());
 	if (result)
 	{
-		receiver->setEnablePortReuse(false);
+		//receiver->setEnablePortReuse(false);
 		clearWarning();
 		NLOG(niceName, "Listening for ArtNet on port " << localPort->intValue());
 	}
