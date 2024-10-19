@@ -64,7 +64,7 @@ public:
 		virtual void dmxDataInChanged(DMXDevice*, int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "") {}
 	};
 
-	DECLARE_INSPECTACLE_CRITICAL_LISTENER(DMXDevice, dmxDevice);
+	DECLARE_INSPECTACLE_SAFE_LISTENER(DMXDevice, dmxDevice);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DMXDevice)
 
