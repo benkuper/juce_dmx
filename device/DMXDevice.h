@@ -24,8 +24,6 @@ public:
 	bool enabled;
 	BoolParameter* isConnected;
 
-	CriticalSection dmxLock;
-
 	bool canReceive;
 
 	EnablingControllableContainer* inputCC;
