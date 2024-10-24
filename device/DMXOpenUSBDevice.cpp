@@ -87,20 +87,11 @@ void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int univ
 {
 	try
 	{
-		//double t = Time::getMillisecondCounterHiRes();
 
 		dmxPort->port->setBreak(true);
-		//Thread::getCurrentThread()->wait(1);
 		dmxPort->port->setBreak(false);
-		//Thread::getCurrentThread()->wait(1);
 		dmxPort->port->write(startCode, 1); //start code
 		dmxPort->port->write(values, numChannels);
-		dmxPort->port->flush();
-
-		//double t2 = Time::getMillisecondCounterHiRes();
-		//DBG("Sent DMX values to OpenDMX, send time = " << (int)(t2-t));
-		//prevMillis = t;
-
 	}
 	catch (serial::IOException e)
 	{

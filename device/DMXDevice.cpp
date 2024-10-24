@@ -18,7 +18,8 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	isConnected(nullptr),
 	canReceive(canReceive),
 	inputCC(nullptr),
-	outputCC(nullptr)
+	outputCC(nullptr),
+	senderThread(this)
 {
 	saveAndLoadRecursiveData = true;
 
@@ -33,8 +34,12 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	}
 
 	outputCC = new EnablingControllableContainer("Output");
+	sendRate = outputCC->addIntParameter("Send Rate", "The rate at which to send data.", 44, 1, 200);
+	sendRate->canBeDisabledByUser = true;
+
 	addChildControllableContainer(outputCC, true);
 
+	updateSenderThread();
 }
 
 DMXDevice::~DMXDevice()
@@ -48,6 +53,18 @@ void DMXDevice::setEnabled(bool value)
 	if (enabled == value) return;
 	enabled = value;
 	refreshEnabled();
+	updateSenderThread();
+}
+
+void DMXDevice::updateSenderThread()
+{
+	bool shouldRun = enabled && outputCC->enabled->boolValue() && sendRate->enabled;
+
+	if (shouldRun != senderThread.isThreadRunning())
+	{
+		if (shouldRun) senderThread.startThread();
+		else senderThread.stopThread(1000);
+	}
 }
 
 void DMXDevice::updateConnectedParam()
@@ -81,9 +98,16 @@ void DMXDevice::setDMXValuesIn(int net, int subnet, int universe, Array<uint8> v
 }
 
 
+
+void DMXDevice::onControllableStateChanged(Controllable* c)
+{
+	if (c == sendRate) updateSenderThread();
+}
+
 void DMXDevice::onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c)
 {
-	if (cc == inputCC && c == inputCC->enabled) updateConnectedParam();
+	if (c == inputCC->enabled) updateConnectedParam();
+	else if (c == outputCC->enabled) updateSenderThread();
 }
 
 int DMXDevice::getFirstUniverse()
@@ -91,17 +115,46 @@ int DMXDevice::getFirstUniverse()
 	return 0;
 }
 
-void DMXDevice::sendDMXValues(DMXUniverse* u, int numChannels)
+void DMXDevice::setDMXValues(DMXUniverse* u, int numChannels)
 {
-	sendDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), numChannels);
+	setDMXValues(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), numChannels);
 }
 
-void DMXDevice::sendDMXValues(int net, int subnet, int universe, uint8* values, int numChannels)
+void DMXDevice::setDMXValues(int net, int subnet, int universe, uint8* values, int numChannels)
 {
 	if (!outputCC->enabled->boolValue()) return;
-	sendDMXValuesInternal(net, subnet, universe, values, jmin(numChannels, DMX_NUM_CHANNELS));
+
+
+	DMXUniverse* targetU = nullptr;
+	for (auto& u : universesToSend)
+	{
+		if (u->net == net && u->subnet == subnet && u->universe == universe)
+		{
+			targetU = u;
+			break;
+		}
+	}
+
+	if (targetU == nullptr)
+	{
+		targetU = new DMXUniverse(net, subnet, universe);
+		universesToSend.add(targetU);
+	}
+
+	targetU->updateValues(Array<uint8>(values, numChannels));
+
+	if (!sendRate->enabled)
+	{
+		sendDMXValues();
+	}
 }
 
+void DMXDevice::sendDMXValues()
+{
+	if (!enabled) return;
+	for (auto& u : universesToSend) sendDMXValuesInternal(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), DMX_NUM_CHANNELS);
+	universesToSend.clear();
+}
 
 
 void DMXDevice::clearDevice()
@@ -138,4 +191,22 @@ DMXDevice* DMXDevice::create(Type type)
 	}
 
 	return nullptr;
+}
+
+DMXDevice::SenderThread::SenderThread(DMXDevice* d) :
+	Thread("DMX Sender Thread"),
+	device(d)
+{
+}
+
+DMXDevice::SenderThread::~SenderThread() {
+	stopThread(1000);
+}
+
+void DMXDevice::SenderThread::run() {
+	while (!threadShouldExit())
+	{
+		wait(1000 / device->sendRate->intValue());
+		device->sendDMXValues();
+	}
 }

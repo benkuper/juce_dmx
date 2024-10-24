@@ -22,36 +22,57 @@ public:
 	Type type;
 
 	bool enabled;
+	bool canReceive;
+
 	BoolParameter* isConnected;
 
-	bool canReceive;
+	IntParameter* sendRate;
 
 	EnablingControllableContainer* inputCC;
 	EnablingControllableContainer* outputCC;
 
+	OwnedArray<DMXUniverse, juce::CriticalSection> universesToSend;
 	virtual void setEnabled(bool value);
 	virtual void refreshEnabled() {}
+
+	void updateSenderThread();
 
 	void updateConnectedParam();
 	virtual bool shouldHaveConnectionParam();
 
+
 	virtual void setupMulticast(Array<DMXUniverse*> multicastIn, Array<DMXUniverse*> multicastOut) {}
 
-	//virtual void sendDMXValue(int net, int subnet, int universe, int channel, int value);
-	//virtual void sendDMXRange(int net, int subnet, int universe, int startChannel, Array<int> values);
-	virtual void sendDMXValues(DMXUniverse* u, int numChannels = DMX_NUM_CHANNELS);
-	virtual void sendDMXValues(int net, int subnet, int universe, uint8* values, int numChannels = DMX_NUM_CHANNELS);
+	virtual void setDMXValues(DMXUniverse* u, int numChannels = DMX_NUM_CHANNELS);
+	virtual void setDMXValues(int net, int subnet, int universe, uint8* values, int numChannels = DMX_NUM_CHANNELS);
+	void sendDMXValues();
 	virtual void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels = DMX_NUM_CHANNELS) = 0;
 
 	void setDMXValuesIn(int net, int subnet, int universe, Array<uint8> values, const String& sourceName = "");
 
+	void onControllableStateChanged(Controllable* c) override;
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
 	virtual int getFirstUniverse();
 
 	virtual void clearDevice();
 
+
 	static DMXDevice* create(Type type);
+
+	class SenderThread :
+		public Thread
+	{
+	public:
+		SenderThread(DMXDevice* d);
+		~SenderThread();
+
+		void run();
+
+		DMXDevice* device;
+	};
+
+	SenderThread senderThread;
 
 	class DMXDeviceListener
 	{
