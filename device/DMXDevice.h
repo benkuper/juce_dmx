@@ -24,6 +24,8 @@ public:
 	bool enabled;
 	bool canReceive;
 
+	int sendExtraWaitMS;
+
 	BoolParameter* isConnected;
 
 	IntParameter* sendRate;

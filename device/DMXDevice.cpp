@@ -17,6 +17,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	enabled(true),
 	isConnected(nullptr),
 	canReceive(canReceive),
+	sendExtraWaitMS(0),
 	inputCC(nullptr),
 	outputCC(nullptr),
 	senderThread(this)
@@ -206,7 +207,7 @@ DMXDevice::SenderThread::~SenderThread() {
 void DMXDevice::SenderThread::run() {
 	while (!threadShouldExit())
 	{
-		wait(1000 / device->sendRate->intValue());
+		wait((1000 / device->sendRate->intValue()) + device->sendExtraWaitMS);
 		device->sendDMXValues();
 	}
 }

@@ -22,6 +22,7 @@
 DMXOpenUSBDevice::DMXOpenUSBDevice() :
 	DMXSerialDevice("OpenDMX", OPENDMX, false)
 {
+	sendExtraWaitMS = 20;
 }
 
 DMXOpenUSBDevice::~DMXOpenUSBDevice()
@@ -87,11 +88,12 @@ void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int univ
 {
 	try
 	{
-
+		Array<uint8> bytes;
+		bytes.addArray(startCode, 1);
+		bytes.addArray(values, numChannels);
 		dmxPort->port->setBreak(true);
 		dmxPort->port->setBreak(false);
-		dmxPort->port->write(startCode, 1); //start code
-		dmxPort->port->write(values, numChannels);
+		dmxPort->writeBytes(bytes);
 	}
 	catch (serial::IOException e)
 	{
