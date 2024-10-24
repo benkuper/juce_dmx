@@ -34,7 +34,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	}
 
 	outputCC = new EnablingControllableContainer("Output");
-	sendRate = outputCC->addIntParameter("Send Rate", "The rate at which to send data.", 44, 1, 200);
+	sendRate = outputCC->addIntParameter("Send Rate", "The rate at which to send data.", 40, 1, 200);
 	sendRate->canBeDisabledByUser = true;
 
 	addChildControllableContainer(outputCC, true);
@@ -106,7 +106,7 @@ void DMXDevice::onControllableStateChanged(Controllable* c)
 
 void DMXDevice::onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c)
 {
-	if (c == inputCC->enabled) updateConnectedParam();
+	if (inputCC != nullptr && c == inputCC->enabled) updateConnectedParam();
 	else if (c == outputCC->enabled) updateSenderThread();
 }
 
