@@ -45,6 +45,7 @@ DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 
 DMXDevice::~DMXDevice()
 {
+	senderThread.stopThread(1000);
 	if (DMXManager::getInstanceWithoutCreating() != nullptr) DMXManager::getInstance()->removeDMXManagerListener(this);
 }
 
