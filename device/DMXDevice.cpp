@@ -126,24 +126,26 @@ void DMXDevice::setDMXValues(int net, int subnet, int universe, uint8* values, i
 {
 	if (!outputCC->enabled->boolValue()) return;
 
-
-	DMXUniverse* targetU = nullptr;
-	for (auto& u : universesToSend)
 	{
-		if (u->net == net && u->subnet == subnet && u->universe == universe)
+		GenericScopedLock lock(universesToSend.getLock());
+		DMXUniverse* targetU = nullptr;
+		for (auto& u : universesToSend)
 		{
-			targetU = u;
-			break;
+			if (u->net == net && u->subnet == subnet && u->universe == universe)
+			{
+				targetU = u;
+				break;
+			}
 		}
-	}
 
-	if (targetU == nullptr)
-	{
-		targetU = new DMXUniverse(net, subnet, universe);
-		universesToSend.add(targetU);
-	}
+		if (targetU == nullptr)
+		{
+			targetU = new DMXUniverse(net, subnet, universe);
+			universesToSend.add(targetU);
+		}
 
-	targetU->updateValues(Array<uint8>(values, numChannels));
+		targetU->updateValues(Array<uint8>(values, numChannels));
+	}
 
 	if (!sendRate->enabled)
 	{
@@ -154,7 +156,12 @@ void DMXDevice::setDMXValues(int net, int subnet, int universe, uint8* values, i
 void DMXDevice::sendDMXValues()
 {
 	if (!enabled) return;
-	for (auto& u : universesToSend) sendDMXValuesInternal(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), DMX_NUM_CHANNELS);
+
+	{
+		GenericScopedLock lock(universesToSend.getLock());
+		for (auto& u : universesToSend) sendDMXValuesInternal(u->net, u->subnet, u->universe, u->values.getRawDataPointer(), DMX_NUM_CHANNELS);
+	}
+
 	universesToSend.clear();
 }
 
