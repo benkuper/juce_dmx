@@ -161,6 +161,7 @@ void DMXDevice::sendDMXValues()
 
 void DMXDevice::clearDevice()
 {
+	senderThread.stopThread(1000);
 }
 
 DMXDevice* DMXDevice::create(Type type)
