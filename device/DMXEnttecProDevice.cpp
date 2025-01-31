@@ -176,6 +176,9 @@ void DMXEnttecProDevice::readDMXPacket(Array<uint8> bytes, int expectedLength)
 		return;
 	}
 
-	setDMXValuesIn(0, 0, 0, Array<uint8>(bytes.getRawDataPointer() + DMXPRO_HEADER_LENGTH + 1, DMX_NUM_CHANNELS));
+	Array<uint8> values = Array<uint8>(bytes.getRawDataPointer() + DMXPRO_HEADER_LENGTH + 1, bytes.size() - DMXPRO_HEADER_LENGTH - 1);
+	values.resize(DMX_NUM_CHANNELS);
+
+	setDMXValuesIn(0, 0, 0, values);
 }
 
