@@ -22,7 +22,7 @@ class DMXArtNetDevice :
 	public Thread //receiving
 {
 public:
-	DMXArtNetDevice();
+	DMXArtNetDevice(bool enableReceive = true);
 	~DMXArtNetDevice();
 
 	//EnumParameter * networkInterface;

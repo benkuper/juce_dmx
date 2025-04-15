@@ -11,16 +11,20 @@
 #include "JuceHeader.h"
 #include "DMXArtNetDevice.h"
 
-DMXArtNetDevice::DMXArtNetDevice() :
-	DMXDevice("ArtNet", ARTNET, true),
+DMXArtNetDevice::DMXArtNetDevice(bool enableReceive) :
+	DMXDevice("ArtNet", ARTNET, enableReceive),
 	Thread("ArtNetReceive"),
-	sender(true)
+	sender(true),
+	localPort(nullptr)
 {
 
-	localPort = inputCC->addIntParameter("Local Port", "Local port to receive ArtNet data. This needs to be enabled in order to receive data", 6454, 0, 65535);
-	//inputNet = inputCC->addIntParameter("Net", "The net to receive from, from 0 to 15", 0, 0, 127);
-	//inputSubnet = inputCC->addIntParameter("Subnet", "The subnet to receive from, from 0 to 15", 0, 0, 15);
-	//inputUniverse = inputCC->addIntParameter("Universe", "The Universe to receive from, from 0 to 15", 0, 0, 15);
+	if (enableReceive)
+	{
+		localPort = inputCC->addIntParameter("Local Port", "Local port to receive ArtNet data. This needs to be enabled in order to receive data", 6454, 0, 65535);
+		//inputNet = inputCC->addIntParameter("Net", "The net to receive from, from 0 to 15", 0, 0, 127);
+		//inputSubnet = inputCC->addIntParameter("Subnet", "The subnet to receive from, from 0 to 15", 0, 0, 15);
+		//inputUniverse = inputCC->addIntParameter("Universe", "The Universe to receive from, from 0 to 15", 0, 0, 15);
+	}
 
 	remoteHost = outputCC->addStringParameter("Remote Host", "IP to which send the Art-Net to", "127.0.0.1");
 	remotePort = outputCC->addIntParameter("Remote Port", "Local port to receive ArtNet data", 6454, 0, 65535);
@@ -41,6 +45,8 @@ DMXArtNetDevice::DMXArtNetDevice() :
 DMXArtNetDevice::~DMXArtNetDevice()
 {
 	//if (Engine::mainEngine != nullptr) Engine::mainEngine->removeEngineListener(this);
+	if (receiver != nullptr) receiver->shutdown();
+	sender.shutdown();
 	stopThread(200);
 }
 
@@ -54,13 +60,13 @@ void DMXArtNetDevice::setupReceiver()
 	stopThread(500);
 	if (receiver != nullptr) receiver->shutdown();
 
-	if (!inputCC->enabled->boolValue())
+	if (inputCC == nullptr || !inputCC->enabled->boolValue())
 	{
 		clearWarning();
 		return;
 	}
 
-	if(isConnected != nullptr) isConnected->setValue(false);
+	if (isConnected != nullptr) isConnected->setValue(false);
 
 	receiver.reset(new DatagramSocket());
 	receiver->setEnablePortReuse(true);
@@ -128,14 +134,13 @@ void DMXArtNetDevice::sendDMXValuesInternal(int net, int subnet, int universe, u
 void DMXArtNetDevice::onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c)
 {
 	DMXDevice::onControllableFeedbackUpdate(cc, c);
-	if (c == inputCC->enabled || c == localPort) setupReceiver();
+	if (inputCC != nullptr && c == inputCC->enabled || c == localPort) setupReceiver();
 }
 
 void DMXArtNetDevice::run()
 {
 	if (!enabled) return;
-
-
+	if (receiver == nullptr) return;
 
 	while (!threadShouldExit())
 	{
@@ -209,4 +214,6 @@ void DMXArtNetDevice::run()
 			wait(10); //100fps
 		}
 	}
+
+	if (receiver != nullptr) receiver->shutdown();
 }
