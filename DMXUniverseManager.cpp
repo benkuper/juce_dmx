@@ -11,7 +11,7 @@
 #include "JuceHeader.h"
 
 DMXUniverseManager::DMXUniverseManager(bool useParams) :
-    BaseManager("Universes"),
+    Manager("Universes"),
     useParams(useParams),
     firstUniverse(0)
 {
