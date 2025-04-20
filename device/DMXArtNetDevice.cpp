@@ -47,7 +47,7 @@ DMXArtNetDevice::~DMXArtNetDevice()
 	//if (Engine::mainEngine != nullptr) Engine::mainEngine->removeEngineListener(this);
 	if (receiver != nullptr) receiver->shutdown();
 	sender.shutdown();
-	stopThread(200);
+	stopThread(1000);
 }
 
 void DMXArtNetDevice::refreshEnabled()

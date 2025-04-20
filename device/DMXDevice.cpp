@@ -216,7 +216,7 @@ DMXDevice::SenderThread::~SenderThread() {
 void DMXDevice::SenderThread::run() {
 	while (!threadShouldExit())
 	{
-		wait((1000 / device->sendRate->intValue()) + device->sendExtraWaitMS);
 		device->sendDMXValues();
+		wait((1000 / device->sendRate->intValue()) + device->sendExtraWaitMS);
 	}
 }
