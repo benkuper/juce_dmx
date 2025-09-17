@@ -30,5 +30,5 @@ DMXUniverseItem* DMXUniverseManager::createItem()
 void DMXUniverseManager::setFirstUniverse(int index)
 {
 	firstUniverse = index;
-	callFunctionOnAllItems(true, true, true, [&](auto i) { ((DMXUniverseItem*)i)->setFirstUniverse(index); });
+	for (auto& u : items) { u->setFirstUniverse(index); };
 }
