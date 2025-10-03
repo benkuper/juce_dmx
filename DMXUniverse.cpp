@@ -109,7 +109,9 @@ DMXUniverseItem::~DMXUniverseItem()
 
 void DMXUniverseItem::setFirstUniverse(int firstUniverse)
 {
-	universeParam->setRange(1, INT32_MAX);
+	bool isOverriden = universeParam->isOverriden;
+	universeParam->setRange(firstUniverse, INT32_MAX);
+	if (!isOverriden) universeParam->setDefaultValue(firstUniverse);
 	universe = universeParam->intValue();
 }
 
