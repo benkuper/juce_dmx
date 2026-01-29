@@ -1,9 +1,9 @@
 /*
   ==============================================================================
 
-    DMXUniverseManager.cpp
-    Created: 10 Dec 2022 6:34:52pm
-    Author:  bkupe
+	DMXUniverseManager.cpp
+	Created: 10 Dec 2022 6:34:52pm
+	Author:  bkupe
 
   ==============================================================================
 */
@@ -11,11 +11,11 @@
 #include "JuceHeader.h"
 
 DMXUniverseManager::DMXUniverseManager(bool useParams) :
-    BaseManager("Universes"),
-    useParams(useParams),
-    firstUniverse(0)
+	Manager("Universes"),
+	useParams(useParams),
+	firstUniverse(0)
 {
-    selectItemWhenCreated = false;
+	selectItemWhenCreated = false;
 }
 
 DMXUniverseManager::~DMXUniverseManager()
@@ -24,11 +24,11 @@ DMXUniverseManager::~DMXUniverseManager()
 
 DMXUniverseItem* DMXUniverseManager::createItem()
 {
-    return new DMXUniverseItem(useParams, firstUniverse);
+	return new DMXUniverseItem(useParams, firstUniverse);
 }
 
 void DMXUniverseManager::setFirstUniverse(int index)
 {
-    firstUniverse = index;
-    for(auto & i : items) i->setFirstUniverse(index);
+	firstUniverse = index;
+	for (auto& u : items) { u->setFirstUniverse(index); };
 }
