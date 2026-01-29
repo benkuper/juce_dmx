@@ -91,8 +91,18 @@ void DMXOpenUSBDevice::sendDMXValuesSerialInternal(int net, int subnet, int univ
 		Array<uint8> bytes;
 		bytes.addArray(startCode, 1);
 		bytes.addArray(values, numChannels);
+		// 2. Generate the BREAK
+		// DMX Spec: Min 88us. Recommended ~176us.
+		// On Windows/Mac/Linux, a 1ms sleep is the safest, easiest way 
+		// to guarantee this passes through the USB stack correctly.
 		dmxPort->port->setBreak(true);
+		juce::Thread::sleep(1);
+
+		// 3. Generate the Mark After Break (MAB)
+		// DMX Spec: Min 8us.
+		// We release the break and wait a bit before sending data.
 		dmxPort->port->setBreak(false);
+		juce::Thread::sleep(1); // 1ms is plenty for MAB (min 8us)
 		dmxPort->writeBytes(bytes);
 	}
 	catch (serial::IOException e)
