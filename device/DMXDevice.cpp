@@ -9,7 +9,6 @@
 */
 
 #include "JuceHeader.h"
-#include "DMXDevice.h"
 
 DMXDevice::DMXDevice(const String& name, Type _type, bool canReceive) :
 	ControllableContainer(name),
@@ -204,7 +203,7 @@ DMXDevice* DMXDevice::create(Type type)
 }
 
 DMXDevice::SenderThread::SenderThread(DMXDevice* d) :
-	Thread("DMX Sender Thread"),
+	Thread("DMX Sender Thread", Thread::Priority::high),
 	device(d)
 {
 }
