@@ -206,7 +206,6 @@ DMXDevice::SenderThread::SenderThread(DMXDevice* d) :
 	Thread("DMX Sender Thread"),
 	device(d)
 {
-	setPriority(Thread::Priority::high);
 }
 
 DMXDevice::SenderThread::~SenderThread() {
@@ -214,6 +213,7 @@ DMXDevice::SenderThread::~SenderThread() {
 }
 
 void DMXDevice::SenderThread::run() {
+	setPriority(Thread::Priority::high);
 	while (!threadShouldExit())
 	{
 		device->sendDMXValues();
