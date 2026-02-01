@@ -203,9 +203,10 @@ DMXDevice* DMXDevice::create(Type type)
 }
 
 DMXDevice::SenderThread::SenderThread(DMXDevice* d) :
-	Thread("DMX Sender Thread", Thread::Priority::high),
+	Thread("DMX Sender Thread"),
 	device(d)
 {
+	setPriority(Thread::Priority::high);
 }
 
 DMXDevice::SenderThread::~SenderThread() {
