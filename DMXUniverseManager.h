@@ -11,7 +11,7 @@
 #pragma once
 
 class DMXUniverseManager :
-	public Manager<DMXUniverseItem>
+	public BaseManager<DMXUniverseItem>
 {
 public:
 	DMXUniverseManager(bool useParams = false);
