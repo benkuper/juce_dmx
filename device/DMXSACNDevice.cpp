@@ -56,6 +56,7 @@ void DMXSACNDevice::setupReceiver()
 
 
 	receiver.reset();
+	lastReceivedSequenceByStream.clear();
 
 	if (!inputCC->enabled->boolValue())
 	{
@@ -67,11 +68,17 @@ void DMXSACNDevice::setupReceiver()
 
 
 	receiver.reset(new DatagramSocket());
+	receiver->setEnablePortReuse(true);
 	bool result = receiver->bindToPort(localPort->intValue());
 
 	if (result)
 	{
-		receiver->setEnablePortReuse(false);
+		for (const auto& multicastAddress : multicastIn)
+		{
+			if (!receiver->joinMulticast(multicastAddress))
+				LOGWARNING("Could not join sACN multicast group " << multicastAddress);
+		}
+
 		clearWarning();
 		NLOG(niceName, "Listening for sACN on port " << localPort->intValue());
 	}
@@ -256,14 +263,19 @@ void DMXSACNDevice::run()
 			LOGWARNING("e131_pkt_validate: " << e131_strerror(receivedError));
 			continue;
 		}
-		if (e131_pkt_discard(&receivedPacket, receivedSeq)) {
-			LOGWARNING("warning: packet out of order received\n");
+
+		const int universe = ((receivedPacket.frame.universe >> 8) & 0xFF) | ((receivedPacket.frame.universe & 0xFF) << 8);
+		const String streamKey = String::toHexString(receivedPacket.root.cid, static_cast<int>(sizeof(receivedPacket.root.cid)), 0)
+			+ ":" + String(universe);
+
+		// E1.31 sequence numbers are independent for each CID/universe stream.
+		if (lastReceivedSequenceByStream.contains(streamKey) && e131_pkt_discard(&receivedPacket, lastReceivedSequenceByStream[streamKey])) {
+			LOGWARNING("Out-of-order sACN packet received for universe " << universe);
 			continue;
 		}
 
-		receivedSeq = receivedPacket.frame.seq_number;
+		lastReceivedSequenceByStream.set(streamKey, receivedPacket.frame.seq_number);
 
-		int universe = ((receivedPacket.frame.universe >> 8) & 0xFF) | ((receivedPacket.frame.universe & 0xFF) << 8);
 		//int numChannels = ((receivedPacket.dmp.prop_val_cnt >> 8) & 0xFF) | ((receivedPacket.dmp.prop_val_cnt & 0xFF) << 8);
 		//int firstChannel = ((receivedPacket.dmp.first_addr >> 8) & 0xFF) | ((receivedPacket.dmp.first_addr & 0xFF) << 8);
 

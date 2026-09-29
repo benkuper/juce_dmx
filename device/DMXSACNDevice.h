@@ -44,7 +44,7 @@ public:
 	std::unique_ptr<DatagramSocket> receiver;
 	e131_packet_t receivedPacket;
 	e131_error_t receivedError;
-	uint8_t receivedSeq = 0x00;
+	HashMap<String, uint8> lastReceivedSequenceByStream;
 
 	//Sender
 	int senderHandle;
