@@ -23,6 +23,8 @@ DMXSACNDevice::DMXSACNDevice() :
 	inputCC->enabled->setValue(false);
 
 	nodeName = outputCC->addStringParameter("Node Name", "Name to advertise", "Chataigne");
+	cid = outputCC->addStringParameter("CID", "Unique E1.31 component identifier for this sACN source", "");
+	cid->setValue(fallbackCid.toString(), false, true, true);
 	//sendMulticast = outputCC->addBoolParameter("Multicast", "If checked, this will send in Multicast Mode", false);
 	remoteHost = outputCC->addStringParameter("Remote Host", "IP to which send the Art-Net to", "127.0.0.1");
 	remotePort = outputCC->addIntParameter("Remote Port", "Local port to receive SACN data", E131_DEFAULT_PORT, 0, 65535);
@@ -168,7 +170,7 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 	{
 		e131_packet_t p;
 		e131_pkt_init(&p, universe, numChannels);
-		memcpy(&p.frame.source_name, nodeName->stringValue().getCharPointer(), nodeName->stringValue().length());
+		updateSenderPacketMetadata(p);
 		senderPackets.set(universe, p);
 	}
 
@@ -178,8 +180,8 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 	{
 		LOG("Num Channels changed for universe " << universe << ", reinit packet");
 		e131_pkt_init(senderPacket, universe, numChannels);
-		memcpy(senderPacket->frame.source_name, nodeName->stringValue().getCharPointer(), nodeName->stringValue().length());
 	}
+	updateSenderPacketMetadata(*senderPacket);
 
 	//String ip = remoteHost->stringValue();
 	//e131_unicast_dest(&senderDest, remoteHost->stringValue().getCharPointer(), remotePort->intValue());
@@ -209,6 +211,17 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 	//	LOGWARNING("Error sending data");
 	//}
 
+}
+
+void DMXSACNDevice::updateSenderPacketMetadata(e131_packet_t& packet) const
+{
+	Uuid sourceCid(cid->stringValue());
+	if (sourceCid.isNull()) sourceCid = fallbackCid;
+	memcpy(packet.root.cid, sourceCid.getRawData(), sizeof(packet.root.cid));
+
+	zeromem(packet.frame.source_name, sizeof(packet.frame.source_name));
+	nodeName->stringValue().copyToUTF8(reinterpret_cast<char*>(packet.frame.source_name), sizeof(packet.frame.source_name));
+	packet.frame.priority = static_cast<uint8>(priority->intValue());
 }
 
 //void DMXSACNDevice::endLoadFile()

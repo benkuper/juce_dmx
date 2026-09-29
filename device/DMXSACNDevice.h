@@ -35,6 +35,8 @@ public:
 	StringParameter* remoteHost;
 	IntParameter* remotePort;
 	StringParameter* nodeName;
+	StringParameter* cid;
+	Uuid fallbackCid;
 	//BoolParameter* sendMulticast;
 	//IntParameter* outputUniverse;
 	IntParameter* priority;
@@ -69,6 +71,7 @@ public:
 	//void sendDMXRange(int startChannel, Array<int> values) override;
 
 	void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
+	void updateSenderPacketMetadata(e131_packet_t& packet) const;
 
 	//	void endLoadFile() override;
 
