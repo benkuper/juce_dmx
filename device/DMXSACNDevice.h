@@ -26,7 +26,7 @@ public:
 	DMXSACNDevice();
 	~DMXSACNDevice();
 
-	//EnumParameter * networkInterface;
+	NetworkInterfaceParameter* networkInterface;
 	IntParameter* localPort;
 	//BoolParameter* receiveMulticast;
 	//IntParameter* inputUniverse;
@@ -52,7 +52,8 @@ public:
 	int senderHandle;
 	HashMap<int, e131_packet_t> senderPackets;
 	//e131_addr_t senderDest;
-	DatagramSocket sender;
+	std::unique_ptr<DatagramSocket> sender;
+	CriticalSection senderLock;
 
 
 	Array<String> multicastIn;
@@ -64,6 +65,7 @@ public:
 
 	void setupReceiver();
 	void setupSender();
+	void afterLoadJSONDataInternal() override;
 
 	void setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> out) override;
 
@@ -79,6 +81,7 @@ public:
 
 	int getFirstUniverse() override;
 
+	void onContainerParameterChanged(Parameter* p) override;
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
 	void run() override;

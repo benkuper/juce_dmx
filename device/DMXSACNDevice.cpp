@@ -16,6 +16,15 @@ DMXSACNDevice::DMXSACNDevice() :
 	Thread("sACN Receive"),
 	senderHandle(-1)
 {
+	networkInterface = new NetworkInterfaceParameter();
+	// E1.31 uses IPv4 multicast addresses.
+	for (int i = networkInterface->enumValues.size(); --i >= 0;)
+	{
+		auto* option = networkInterface->enumValues[i];
+		if (option->value.toString().containsChar(':')) networkInterface->removeOption(option->key);
+	}
+	addParameter(networkInterface);
+
 	localPort = inputCC->addIntParameter("Local Port", "Local port to receive SACN data. This needs to be enabled in order to receive data", E131_DEFAULT_PORT, 0, 65535);
 	//receiveMulticast = inputCC->addBoolParameter("Multicast", "If checked, this will receive in Multicast Mode", false);
 	//inputUniverse = inputCC->addIntParameter("Universe", "The Universe to receive from, from 0 to 15", 1, 1, 64000);
@@ -38,6 +47,7 @@ DMXSACNDevice::DMXSACNDevice() :
 
 DMXSACNDevice::~DMXSACNDevice()
 {
+	senderThread.stopThread(1000);
 	//if (Engine::mainEngine != nullptr) Engine::mainEngine->removeEngineListener(this);
 
 	signalThreadShouldExit();
@@ -48,6 +58,7 @@ DMXSACNDevice::~DMXSACNDevice()
 void DMXSACNDevice::refreshEnabled()
 {
 	setupReceiver();
+	setupSender();
 }
 
 void DMXSACNDevice::setupReceiver()
@@ -59,10 +70,11 @@ void DMXSACNDevice::setupReceiver()
 
 	receiver.reset();
 	lastReceivedSequenceByStream.clear();
+	if (isConnected != nullptr) isConnected->setValue(false);
 
-	if (!inputCC->enabled->boolValue())
+	if (!enabled || !inputCC->enabled->boolValue())
 	{
-		clearWarning();
+		clearWarning("Input");
 		return;
 	}
 
@@ -75,18 +87,28 @@ void DMXSACNDevice::setupReceiver()
 
 	if (result)
 	{
+		clearWarning("Input");
 		for (const auto& multicastAddress : multicastIn)
 		{
-			if (!receiver->joinMulticast(multicastAddress))
+			// Keep the wildcard bind: binding to a unicast address prevents
+			// multicast reception on some platforms. Select the NIC in membership.
+			ip_mreq membership {};
+			membership.imr_multiaddr.s_addr = inet_addr(multicastAddress.toRawUTF8());
+			const String localIP = networkInterface->getIP();
+			membership.imr_interface.s_addr = localIP.isEmpty() ? htonl(INADDR_ANY) : inet_addr(localIP.toRawUTF8());
+			if (setsockopt(receiver->getRawSocketHandle(), IPPROTO_IP, IP_ADD_MEMBERSHIP,
+				reinterpret_cast<const char*>(&membership), sizeof(membership)) != 0)
+			{
 				LOGWARNING("Could not join sACN multicast group " << multicastAddress);
+				setWarningMessage("Could not join sACN multicast group " + multicastAddress, "Input");
+			}
 		}
 
-		clearWarning();
 		NLOG(niceName, "Listening for sACN on port " << localPort->intValue());
 	}
 	else
 	{
-		setWarningMessage("Error binding port " + localPort->stringValue() + ", is it already taken ?");
+		setWarningMessage("Error binding port " + localPort->stringValue() + ", is it already taken ?", "Input");
 		return;
 	}
 
@@ -98,32 +120,52 @@ void DMXSACNDevice::setupReceiver()
 void DMXSACNDevice::setupSender()
 {
 	if (isCurrentlyLoadingData) return;
-	if (!outputCC->enabled->boolValue()) return;
+	const ScopedLock lock(senderLock);
+	sender.reset();
+	clearWarning("Output");
+	if (!enabled || !outputCC->enabled->boolValue()) return;
 
-	//senderHandle = e131_socket();
-	//if (sendMulticast->boolValue()) sender.joinMulticast(getMulticastIPForUniverse(outputUniverse->intValue()));
-	//else
-	//sender.leaveMulticast(getMulticastIPForUniverse(outputUniverse->intValue()));
+	const String localIP = networkInterface->getIP();
+	auto socket = std::make_unique<DatagramSocket>();
+	if (!socket->bindToPort(0, localIP))
+	{
+		setWarningMessage("Could not bind sACN output to network interface " + localIP, "Output");
+		return;
+	}
 
+	// A local bind alone does not select the outgoing multicast interface.
+	in_addr address {};
+	address.s_addr = localIP.isEmpty() ? htonl(INADDR_ANY) : inet_addr(localIP.toRawUTF8());
+	if (setsockopt(socket->getRawSocketHandle(), IPPROTO_IP, IP_MULTICAST_IF,
+		reinterpret_cast<const char*>(&address), sizeof(address)) != 0)
+	{
+		setWarningMessage("Could not select sACN multicast output interface " + localIP, "Output");
+		return;
+	}
+	sender = std::move(socket);
+}
 
+void DMXSACNDevice::afterLoadJSONDataInternal()
+{
+	setupReceiver();
+	setupSender();
 }
 
 void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> out)
 {
 	//Receiver
-	if (receiver != nullptr) for (auto& i : multicastIn) receiver->leaveMulticast(i);
-
 	multicastIn.clear();
 	for (auto& u : in)
 	{
 		String s = getMulticastIPForUniverse(u->universe);
-		multicastIn.add(s);
-		if (receiver != nullptr) receiver->joinMulticast(s);
+		multicastIn.addIfNotAlreadyThere(s);
 	}
+	// Recreating the socket drops memberships on the previously selected NIC.
+	setupReceiver();
 
 
 	////Sender
-	for (auto& i : multicastOut) sender.leaveMulticast(i);
+	const ScopedLock lock(senderLock);
 
 	multicastOut.clear();
 	outMulticastMap.clear();
@@ -158,6 +200,8 @@ void DMXSACNDevice::setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> o
 
 void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels)
 {
+	const ScopedLock lock(senderLock);
+	if (sender == nullptr) return;
 	//String ip = sendMulticast->boolValue() ? getMulticastIPForUniverse(outputUniverse->intValue()) : remoteHost->stringValue();
 
 	if (universe == 0)
@@ -193,7 +237,7 @@ void DMXSACNDevice::sendDMXValuesInternal(int net, int subnet, int universe, uin
 
 	//ssize_t sent = e131_send(senderHandle, senderPacket, sender.sen);
 	String ip = outMulticastMap.contains(universe) ? outMulticastMap[universe] : remoteHost->stringValue();
-	int sent = sender.write(ip, remotePort->intValue(), senderPacket, sizeof(e131_packet_t));
+	int sent = sender->write(ip, remotePort->intValue(), senderPacket, sizeof(e131_packet_t));
 
 	if (sent <= 0)
 	{
@@ -241,13 +285,23 @@ int DMXSACNDevice::getFirstUniverse()
 	return 1;
 }
 
+void DMXSACNDevice::onContainerParameterChanged(Parameter* p)
+{
+	if (isCurrentlyLoadingData) return;
+	if (p == networkInterface)
+	{
+		setupReceiver();
+		setupSender();
+	}
+}
+
 void DMXSACNDevice::onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c)
 {
 	DMXDevice::onControllableFeedbackUpdate(cc, c);
+	if (isCurrentlyLoadingData) return;
 	if (c == inputCC->enabled || c == localPort /*|| c == receiveMulticast || c == inputUniverse*/) setupReceiver();
-	else if (cc == outputCC)
+	else if (c == outputCC->enabled)
 	{
-		//if (c == sendMulticast) remoteHost->setEnabled(!sendMulticast->boolValue());
 		setupSender();
 	}
 }

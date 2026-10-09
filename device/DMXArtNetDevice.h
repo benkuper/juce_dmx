@@ -25,7 +25,7 @@ public:
 	DMXArtNetDevice(bool enableReceive = true);
 	~DMXArtNetDevice();
 
-	//EnumParameter * networkInterface;
+	NetworkInterfaceParameter* networkInterface;
 	IntParameter* localPort;
 	//StringParameter * nodeName;
 
@@ -33,7 +33,9 @@ public:
 	IntParameter* remotePort;
 
 	std::unique_ptr<DatagramSocket> receiver;
-	DatagramSocket sender;
+	std::unique_ptr<DatagramSocket> sender;
+	CriticalSection senderLock;
+	unsigned int receiverInterfaceIndex = 0;
 
 	uint8 sequenceNumber;
 	uint8 artnetPacket[MAX_PACKET_LENGTH]{ 'A','r','t','-','N','e','t',0, 0x00 , 0x50,  0, PROTOCOL_VERSION };
@@ -43,6 +45,8 @@ public:
 
 	void refreshEnabled() override;
 	void setupReceiver();
+	void setupSender();
+	void afterLoadJSONDataInternal() override;
 
 	//void sendDMXValue(int channel, int value) override;
 	//void sendDMXRange(int startChannel, Array<int> values) override;
@@ -51,6 +55,7 @@ public:
 
 	//	void endLoadFile() override;
 
+	void onContainerParameterChanged(Parameter* p) override;
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
 	void run() override;
