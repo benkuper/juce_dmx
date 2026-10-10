@@ -52,6 +52,8 @@ DMXArtNetDevice::DMXArtNetDevice(bool enableReceive) :
 	if (enableReceive)
 	{
 		localPort = inputCC->addIntParameter("Local Port", "Local port to receive ArtNet data. This needs to be enabled in order to receive data", 6454, 0, 65535);
+		mergeMode = inputCC->addEnumParameter("Merge Mode", "Merge sources using the highest level (HTP) or the last channel value change (LTP).");
+		mergeMode->addOption("HTP", DMXInputMerger::HTP)->addOption("LTP", DMXInputMerger::LTP);
 		//inputNet = inputCC->addIntParameter("Net", "The net to receive from, from 0 to 15", 0, 0, 127);
 		//inputSubnet = inputCC->addIntParameter("Subnet", "The subnet to receive from, from 0 to 15", 0, 0, 15);
 		//inputUniverse = inputCC->addIntParameter("Universe", "The Universe to receive from, from 0 to 15", 0, 0, 15);
@@ -89,9 +91,11 @@ void DMXArtNetDevice::refreshEnabled()
 
 void DMXArtNetDevice::setupReceiver()
 {
-	stopThread(500);
+	signalThreadShouldExit();
 	if (receiver != nullptr) receiver->shutdown();
+	stopThread(500);
 	receiver.reset();
+	inputMerger.clear();
 	receiverInterfaceIndex = 0;
 	if (isConnected != nullptr) isConnected->setValue(false);
 
@@ -255,6 +259,10 @@ void DMXArtNetDevice::run()
 
 	while (!threadShouldExit())
 	{
+		for (const auto& merged : inputMerger.poll(Time::getMillisecondCounterHiRes(), static_cast<DMXInputMerger::Mode>((int)mergeMode->getValueData())))
+			setDMXValuesIn((merged.universe >> 8) & 0x7f, (merged.universe >> 4) & 0xf, merged.universe & 0xf,
+				Array<uint8>(merged.levels.data(), DMX_NUM_CHANNELS), String(merged.sourceName));
+
 		String rAddress = "";
 		int rPort = 0;
 
@@ -293,26 +301,12 @@ void DMXArtNetDevice::run()
 #endif
 			bytesRead = receiver->read(receiveBuffer, MAX_PACKET_LENGTH, false, rAddress, rPort);
 
-		bool artExtPacket = false;
-
 		if (bytesRead > 0)
 		{
-			for (uint8 i = 0; i < 8; ++i)
-			{
-				//DBG("Check " << (char)receiveBuffer[i] << " <> " << (char)artnetPacket[i]);
-				if (receiveBuffer[i] != artnetPacket[i])
-				{
-					if (receiveBuffer[i] != artextPacket[i])
-					{
-						NLOGWARNING(niceName, "Received packet is not valid ArtNet");
-						break;
-					}
-					else
-					{
-						artExtPacket = true;
-					}
-				}
-			}
+			if (bytesRead < 12) continue;
+			const bool artExtPacket = memcmp(receiveBuffer, artextPacket, 8) == 0;
+			if (!artExtPacket && memcmp(receiveBuffer, artnetPacket, 8) != 0) continue;
+			if ((receiveBuffer[10] << 8 | receiveBuffer[11]) < PROTOCOL_VERSION) continue;
 
 			int opcode = receiveBuffer[8] | receiveBuffer[9] << 8;
 
@@ -320,24 +314,14 @@ void DMXArtNetDevice::run()
 			{
 			case DMX_OPCODE:
 			{
-				//int sequence = receiveBuffer[12];
-
-
-				int universe = receiveBuffer[14] & 0xF;
-				int subnet = (receiveBuffer[14] >> 4) & 0xF;
-				int net = receiveBuffer[15] & 0x7F;
-
-				//LOG("Received with universe : " << universe << "/" << subnet << "/" << net);
-
-
-#if JUCE_DEBUG
-				int dmxDataLength = receiveBuffer[17] | receiveBuffer[16] << 8;
-				jassert(dmxDataLength == DMX_NUM_CHANNELS);
-#endif
-
-				String sName = rAddress + ":" + String(rPort);
-				Array<uint8> values = Array<uint8>(receiveBuffer + DMX_HEADER_LENGTH, DMX_NUM_CHANNELS);
-				setDMXValuesIn(net, subnet, universe, values, sName);
+				if (bytesRead < DMX_HEADER_LENGTH) break;
+				const int count = receiveBuffer[17] | receiveBuffer[16] << 8;
+				if (count < 2 || count > DMX_NUM_CHANNELS || (count & 1) != 0 || bytesRead < DMX_HEADER_LENGTH + count) break;
+				const int universe = receiveBuffer[14] | ((receiveBuffer[15] & 0x7f) << 8);
+				// Art-Net sources are distinguished by IP and physical port, not UDP port.
+				const String sourceID = rAddress + ":" + String(receiveBuffer[13]) + (artExtPacket ? ":ext" : "");
+				inputMerger.receive(universe, sourceID.toStdString(), receiveBuffer + DMX_HEADER_LENGTH, count,
+					Time::getMillisecondCounterHiRes(), 100, 0, receiveBuffer[12] == 0 ? -1 : receiveBuffer[12]);
 
 			}
 			break;

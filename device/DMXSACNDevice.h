@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "DMXInputMerger.h"
+
 #define NUM_CHANNELS 512
 
 #pragma warning(push) 
@@ -29,6 +31,7 @@ public:
 	NetworkInterfaceParameter* networkInterface;
 	BoolParameter* useMulticast;
 	IntParameter* localPort;
+	EnumParameter* mergeMode;
 	//BoolParameter* receiveMulticast;
 	//IntParameter* inputUniverse;
 
@@ -47,7 +50,7 @@ public:
 	std::unique_ptr<DatagramSocket> receiver;
 	e131_packet_t receivedPacket;
 	e131_error_t receivedError;
-	HashMap<String, uint8> lastReceivedSequenceByStream;
+	DMXInputMerger inputMerger { DMXInputMerger::Protocol::SACN };
 
 	//Sender
 	int senderHandle;
@@ -65,6 +68,7 @@ public:
 	void refreshEnabled() override;
 
 	void setupReceiver();
+	void setReceiverMembership(const String& address, bool join);
 	void setupSender();
 	void afterLoadJSONDataInternal() override;
 

@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "DMXInputMerger.h"
+
 #define DMX_OPCODE 0x5000
 #define DMX_SYNC_OPCODE 0x5200
 #define PROTOCOL_VERSION 14
@@ -27,6 +29,8 @@ public:
 
 	NetworkInterfaceParameter* networkInterface;
 	IntParameter* localPort;
+	EnumParameter* mergeMode = nullptr;
+	DMXInputMerger inputMerger { DMXInputMerger::Protocol::ArtNet };
 	//StringParameter * nodeName;
 
 	StringParameter* remoteHost;
