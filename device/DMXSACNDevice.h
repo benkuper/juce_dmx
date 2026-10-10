@@ -27,6 +27,7 @@ public:
 	~DMXSACNDevice();
 
 	NetworkInterfaceParameter* networkInterface;
+	BoolParameter* useMulticast;
 	IntParameter* localPort;
 	//BoolParameter* receiveMulticast;
 	//IntParameter* inputUniverse;

@@ -38,4 +38,5 @@ public:
 	std::unique_ptr<IntParameterLabelUI> universeUI;
 
 	void resizedInternalHeaderItemInternal(Rectangle<int>& r) override;
+	void newMessage(const ContainerAsyncEvent& event) override;
 };

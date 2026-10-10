@@ -24,6 +24,7 @@ DMXSACNDevice::DMXSACNDevice() :
 		if (option->value.toString().containsChar(':')) networkInterface->removeOption(option->key);
 	}
 	addParameter(networkInterface);
+	useMulticast = addBoolParameter("Use Multicast", "Receive and send sACN using each universe's multicast address instead of Remote Host", false);
 
 	localPort = inputCC->addIntParameter("Local Port", "Local port to receive SACN data. This needs to be enabled in order to receive data", E131_DEFAULT_PORT, 0, 65535);
 	//receiveMulticast = inputCC->addBoolParameter("Multicast", "If checked, this will receive in Multicast Mode", false);
@@ -35,8 +36,9 @@ DMXSACNDevice::DMXSACNDevice() :
 	cid = outputCC->addStringParameter("CID", "Unique E1.31 component identifier for this sACN source", "");
 	cid->setValue(fallbackCid.toString(), false, true, true);
 	//sendMulticast = outputCC->addBoolParameter("Multicast", "If checked, this will send in Multicast Mode", false);
-	remoteHost = outputCC->addStringParameter("Remote Host", "IP to which send the Art-Net to", "127.0.0.1");
-	remotePort = outputCC->addIntParameter("Remote Port", "Local port to receive SACN data", E131_DEFAULT_PORT, 0, 65535);
+	remoteHost = outputCC->addStringParameter("Remote Host", "IP to send sACN to when multicast is disabled", "127.0.0.1");
+	remoteHost->setEnabled(!useMulticast->boolValue());
+	remotePort = outputCC->addIntParameter("Remote Port", "Port on which the remote host receives sACN data", E131_DEFAULT_PORT, 0, 65535);
 	//outputUniverse = outputCC->addIntParameter("Universe", "The Universe to send to, from 0 to 15", 1, 1, 64000);
 	priority = outputCC->addIntParameter("Priority", "Priority of the packets to send", 100, 0, 200);
 	setupSender();
@@ -147,6 +149,7 @@ void DMXSACNDevice::setupSender()
 
 void DMXSACNDevice::afterLoadJSONDataInternal()
 {
+	remoteHost->setEnabled(!useMulticast->boolValue());
 	setupReceiver();
 	setupSender();
 }
@@ -287,6 +290,7 @@ int DMXSACNDevice::getFirstUniverse()
 
 void DMXSACNDevice::onContainerParameterChanged(Parameter* p)
 {
+	if (p == useMulticast) remoteHost->setEnabled(!useMulticast->boolValue());
 	if (isCurrentlyLoadingData) return;
 	if (p == networkInterface)
 	{

@@ -19,8 +19,11 @@ public:
 
 	bool useParams;
 	int firstUniverse;
+	bool showArtNetAddressing;
 
 	DMXUniverseItem* createItem() override;
 
 	void setFirstUniverse(int index);
+	void setShowArtNetAddressing(bool show);
+	void addItemInternal(DMXUniverseItem* item, var data) override;
 };

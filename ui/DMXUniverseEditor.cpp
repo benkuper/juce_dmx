@@ -21,6 +21,8 @@ DMXUniverseItemEditor::DMXUniverseItemEditor(Array<Inspectable*> inspectables, b
 	addAndMakeVisible(netUI.get());
 	addAndMakeVisible(subnetUI.get());
 	addAndMakeVisible(universeUI.get());
+	netUI->setVisible(dmxUniverse->showArtNetAddressing);
+	subnetUI->setVisible(dmxUniverse->showArtNetAddressing);
 }
 
 DMXUniverseItemEditor::~DMXUniverseItemEditor()
@@ -30,10 +32,22 @@ DMXUniverseItemEditor::~DMXUniverseItemEditor()
 void DMXUniverseItemEditor::resizedInternalHeaderItemInternal(Rectangle<int>& r)
 {
 	universeUI->setBounds(r.removeFromRight(100).reduced(3));
+	if (!dmxUniverse->showArtNetAddressing) return;
 	r.removeFromRight(2);
 	subnetUI->setBounds(r.removeFromRight(80).reduced(3));
 	r.removeFromRight(2);
 	netUI->setBounds(r.removeFromRight(60).reduced(3));
+}
+
+void DMXUniverseItemEditor::newMessage(const ContainerAsyncEvent& event)
+{
+	BaseItemEditor::newMessage(event);
+	if (event.type == ContainerAsyncEvent::ControllableContainerNeedsRebuild)
+	{
+		netUI->setVisible(dmxUniverse->showArtNetAddressing);
+		subnetUI->setVisible(dmxUniverse->showArtNetAddressing);
+		resized();
+	}
 }
 
 

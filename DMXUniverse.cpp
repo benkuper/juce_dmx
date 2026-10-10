@@ -72,7 +72,8 @@ void DMXUniverse::updateValues(Array<uint8> newValues, bool dirtyIfDifferent)
 DMXUniverseItem::DMXUniverseItem(bool useParams, int firstUniverse) :
 	BaseItem("Universe", false, false),
 	DMXUniverse(0, 0, firstUniverse),
-	useParams(useParams)
+	useParams(useParams),
+	showArtNetAddressing(true)
 {
 	editorIsCollapsed = useParams;
 
@@ -113,6 +114,16 @@ void DMXUniverseItem::setFirstUniverse(int firstUniverse)
 	universeParam->setRange(firstUniverse, INT32_MAX);
 	if (!isOverriden) universeParam->setDefaultValue(firstUniverse);
 	universe = universeParam->intValue();
+}
+
+void DMXUniverseItem::setShowArtNetAddressing(bool show)
+{
+	const bool hide = useParams || !show;
+	if (showArtNetAddressing == show && netParam->hideInEditor == hide && subnetParam->hideInEditor == hide) return;
+	showArtNetAddressing = show;
+	netParam->hideInEditor = hide;
+	subnetParam->hideInEditor = hide;
+	queuedNotifier.addMessage(new ContainerAsyncEvent(ContainerAsyncEvent::ControllableContainerNeedsRebuild, this));
 }
 
 void DMXUniverseItem::updateValue(int channel, uint8 value, bool dirtyIfDifferent)
