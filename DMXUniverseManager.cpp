@@ -11,9 +11,10 @@
 #include "JuceHeader.h"
 
 DMXUniverseManager::DMXUniverseManager(bool useParams) :
-	Manager("Universes"),
+	BaseManager("Universes"),
 	useParams(useParams),
-	firstUniverse(0)
+	firstUniverse(0),
+	showArtNetAddressing(true)
 {
 	selectItemWhenCreated = false;
 }
@@ -31,4 +32,15 @@ void DMXUniverseManager::setFirstUniverse(int index)
 {
 	firstUniverse = index;
 	for (auto& u : items) { u->setFirstUniverse(index); };
+}
+
+void DMXUniverseManager::setShowArtNetAddressing(bool show)
+{
+	showArtNetAddressing = show;
+	for (auto* u : items) u->setShowArtNetAddressing(show);
+}
+
+void DMXUniverseManager::addItemInternal(DMXUniverseItem* item, var data)
+{
+	item->setShowArtNetAddressing(showArtNetAddressing);
 }

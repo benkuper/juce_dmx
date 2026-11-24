@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "DMXInputMerger.h"
+
 #define NUM_CHANNELS 512
 
 #pragma warning(push) 
@@ -26,8 +28,10 @@ public:
 	DMXSACNDevice();
 	~DMXSACNDevice();
 
-	//EnumParameter * networkInterface;
+	NetworkInterfaceParameter* networkInterface;
+	BoolParameter* useMulticast;
 	IntParameter* localPort;
+	EnumParameter* mergeMode;
 	//BoolParameter* receiveMulticast;
 	//IntParameter* inputUniverse;
 
@@ -35,6 +39,8 @@ public:
 	StringParameter* remoteHost;
 	IntParameter* remotePort;
 	StringParameter* nodeName;
+	StringParameter* cid;
+	Uuid fallbackCid;
 	//BoolParameter* sendMulticast;
 	//IntParameter* outputUniverse;
 	IntParameter* priority;
@@ -44,13 +50,14 @@ public:
 	std::unique_ptr<DatagramSocket> receiver;
 	e131_packet_t receivedPacket;
 	e131_error_t receivedError;
-	uint8_t receivedSeq = 0x00;
+	DMXInputMerger inputMerger { DMXInputMerger::Protocol::SACN };
 
 	//Sender
 	int senderHandle;
 	HashMap<int, e131_packet_t> senderPackets;
 	//e131_addr_t senderDest;
-	DatagramSocket sender;
+	std::unique_ptr<DatagramSocket> sender;
+	CriticalSection senderLock;
 
 
 	Array<String> multicastIn;
@@ -61,7 +68,9 @@ public:
 	void refreshEnabled() override;
 
 	void setupReceiver();
+	void setReceiverMembership(const String& address, bool join);
 	void setupSender();
+	void afterLoadJSONDataInternal() override;
 
 	void setupMulticast(Array<DMXUniverse*> in, Array<DMXUniverse*> out) override;
 
@@ -69,6 +78,7 @@ public:
 	//void sendDMXRange(int startChannel, Array<int> values) override;
 
 	void sendDMXValuesInternal(int net, int subnet, int universe, uint8* values, int numChannels) override;
+	void updateSenderPacketMetadata(e131_packet_t& packet) const;
 
 	//	void endLoadFile() override;
 
@@ -76,6 +86,7 @@ public:
 
 	int getFirstUniverse() override;
 
+	void onContainerParameterChanged(Parameter* p) override;
 	void onControllableFeedbackUpdate(ControllableContainer* cc, Controllable* c) override;
 
 	void run() override;

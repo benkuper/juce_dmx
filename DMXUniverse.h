@@ -116,9 +116,11 @@ public:
 	IntParameter* universeParam;
 
 	bool useParams;
+	bool showArtNetAddressing;
 	Array<DMXValueParameter*> valueParams;
 
 	virtual void setFirstUniverse(int firstUniverse);
+	void setShowArtNetAddressing(bool show);
 
 	virtual void updateValue(int channel, uint8 value, bool dirtyIfDifferent = false) override;
 	virtual void updateValues(Array<uint8> values, bool dirtyIfDifferent = false) override;

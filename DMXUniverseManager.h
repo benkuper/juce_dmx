@@ -11,7 +11,7 @@
 #pragma once
 
 class DMXUniverseManager :
-	public Manager<DMXUniverseItem>
+	public BaseManager<DMXUniverseItem>
 {
 public:
 	DMXUniverseManager(bool useParams = false);
@@ -19,8 +19,11 @@ public:
 
 	bool useParams;
 	int firstUniverse;
+	bool showArtNetAddressing;
 
 	DMXUniverseItem* createItem() override;
 
 	void setFirstUniverse(int index);
+	void setShowArtNetAddressing(bool show);
+	void addItemInternal(DMXUniverseItem* item, var data) override;
 };
